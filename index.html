@@ -1,0 +1,2656 @@
+<!doctype html>
+<html lang="en" class="h-full">
+ <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>WareMind - Inventory Management</title>
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <script src="https://cdn.jsdelivr.net/npm/lucide@0.263.0/dist/umd/lucide.min.js"></script>
+  <script src="/_sdk/element_sdk.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&amp;family=Outfit:wght@600;700;800&amp;display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            display: ['Outfit', 'sans-serif'],
+            body: ['DM Sans', 'sans-serif']
+          },
+          colors: {
+            brand: {
+              50: '#eef2ff',
+              100: '#e0e7ff',
+              200: '#c7d2fe',
+              300: '#a5b4fc',
+              400: '#818cf8',
+              500: '#6366f1',
+              600: '#4f46e5',
+              700: '#4338ca',
+              800: '#3730a3',
+              900: '#312e81'
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    html, body { height: 100%; margin: 0; font-family: 'DM Sans', sans-serif; }
+
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(24px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+    @keyframes slideInRight {
+      from { opacity: 0; transform: translateX(30px); }
+      to { opacity: 1; transform: translateX(0); }
+    }
+    @keyframes slideInLeft {
+      from { opacity: 0; transform: translateX(-30px); }
+      to { opacity: 1; transform: translateX(0); }
+    }
+    @keyframes pulse-glow {
+      0%, 100% { box-shadow: 0 0 20px rgba(99,102,241,0.15); }
+      50% { box-shadow: 0 0 40px rgba(99,102,241,0.25); }
+    }
+    @keyframes toast-in {
+      from { opacity: 0; transform: translateY(-16px) scale(0.95); }
+      to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+    @keyframes toast-out {
+      from { opacity: 1; transform: translateY(0) scale(1); }
+      to { opacity: 0; transform: translateY(-16px) scale(0.95); }
+    }
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    @keyframes float {
+      0%, 100% { transform: translateY(0px); }
+      50% { transform: translateY(-8px); }
+    }
+    @keyframes shimmer {
+      0%, 100% { background-position: -1000px 0; }
+      50% { background-position: 1000px 0; }
+    }
+    @keyframes blob {
+      0%, 100% { transform: translate(0, 0) scale(1); }
+      25% { transform: translate(20px, -30px) scale(1.1); }
+      50% { transform: translate(-20px, 20px) scale(0.9); }
+      75% { transform: translate(30px, 30px) scale(1.05); }
+    }
+    @keyframes gradient-shift {
+      0%, 100% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+    }
+    @keyframes bounce-in {
+      0% { transform: scale(0.3); opacity: 0; }
+      50% { opacity: 1; }
+      70% { transform: scale(1.05); }
+      100% { transform: scale(1); }
+    }
+    @keyframes chart-fill {
+      from { stroke-dashoffset: 565; }
+      to { stroke-dashoffset: 0; }
+    }
+    @keyframes counter {
+      from { opacity: 0; transform: scale(0.8); }
+      to { opacity: 1; transform: scale(1); }
+    }
+
+    .anim-fade-up { animation: fadeInUp 0.5s ease-out forwards; }
+    .chart-animate { animation: chart-fill 2s ease-out forwards; }
+    .counter-animate { animation: counter 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; }
+    .anim-fade-in { animation: fadeIn 0.4s ease-out forwards; }
+    .anim-slide-right { animation: slideInRight 0.4s ease-out forwards; }
+    .anim-slide-left { animation: slideInLeft 0.4s ease-out forwards; }
+    .card-glow { animation: pulse-glow 3s ease-in-out infinite; }
+    .toast-enter { animation: toast-in 0.3s ease-out forwards; }
+    .toast-exit { animation: toast-out 0.3s ease-in forwards; }
+    .spinner { animation: spin 0.7s linear infinite; }
+    .float-anim { animation: float 3s ease-in-out infinite; }
+    .blob-anim { animation: blob 6s ease-in-out infinite; }
+    .gradient-anim { animation: gradient-shift 3s ease infinite; background-size: 200% 200%; }
+    .bounce-in { animation: bounce-in 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; }
+
+    .input-field {
+      transition: all 0.3s ease;
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(8px);
+      color: #1e293b;
+      border: 1px solid #e2e8f0;
+    }
+    .input-field:focus {
+      background: rgba(255, 255, 255, 1);
+      box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.1);
+      transform: translateY(-2px);
+      border-color: #0ea5e9;
+    }
+    .input-field::placeholder {
+      color: #94a3b8;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%);
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 15px rgba(14, 165, 233, 0.2);
+    }
+    .btn-primary:hover:not(:disabled) {
+      background: linear-gradient(135deg, #06b6d4 0%, #0369a1 100%);
+      transform: translateY(-3px);
+      box-shadow: 0 8px 25px rgba(14, 165, 233, 0.3);
+    }
+    .btn-primary:active:not(:disabled) {
+      transform: translateY(-1px);
+    }
+    .btn-primary:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .btn-secondary {
+      background: rgba(255, 255, 255, 0.9);
+      border: 2px solid #e2e8f0;
+      backdrop-filter: blur(8px);
+      transition: all 0.3s ease;
+      color: #1e293b;
+    }
+    .btn-secondary:hover {
+      background: rgba(14, 165, 233, 0.05);
+      border-color: #0ea5e9;
+      transform: translateY(-2px);
+    }
+
+    .bg-pattern {
+      background: linear-gradient(135deg, #ffffff 0%, #f9fafb 25%, #f3f4f6 50%, #eeeff2 75%, #ffffff 100%);
+      background-size: 400% 400%;
+      animation: gradient-anim 15s ease infinite;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .bg-pattern::before {
+      content: '';
+      position: absolute;
+      width: 400px;
+      height: 400px;
+      background: radial-gradient(circle at 30% 70%, rgba(59, 130, 246, 0.05), transparent 50%);
+      border-radius: 50%;
+      top: -200px;
+      left: -100px;
+      animation: blob 8s ease-in-out infinite;
+    }
+
+    .bg-pattern::after {
+      content: '';
+      position: absolute;
+      width: 300px;
+      height: 300px;
+      background: radial-gradient(circle at 70% 30%, rgba(16, 185, 129, 0.04), transparent 50%);
+      border-radius: 50%;
+      bottom: -150px;
+      right: -50px;
+      animation: blob 10s ease-in-out infinite;
+    }
+
+    .otp-input {
+      width: 56px;
+      height: 64px;
+      text-align: center;
+      font-size: 1.5rem;
+      font-weight: 700;
+      border: 2px solid #e2e8f0;
+      border-radius: 16px;
+      transition: all 0.3s;
+      font-family: 'Outfit', sans-serif;
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(8px);
+      color: #1e293b;
+    }
+    .otp-input:focus {
+      border-color: #0ea5e9;
+      background: rgba(255, 255, 255, 1);
+      box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.1);
+      outline: none;
+      transform: scale(1.05);
+    }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar { width: 8px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.3); border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.5); }
+
+    .step-dot {
+      width: 12px; height: 12px; border-radius: 50%;
+      background: rgba(255, 255, 255, 0.4);
+      transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+    .step-dot.active {
+      background: #ffffff;
+      box-shadow: 0 0 12px rgba(255, 255, 255, 0.8);
+      transform: scale(1.3);
+    }
+    .step-dot.completed {
+      background: #4ade80;
+      box-shadow: 0 0 12px rgba(74, 222, 128, 0.6);
+    }
+
+    .card-base {
+      background: rgba(255, 255, 255, 0.9);
+      backdrop-filter: blur(20px);
+      border: 1px solid #e2e8f0;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.08);
+      transition: all 0.3s ease;
+    }
+
+    .card-base:hover {
+      box-shadow: 0 30px 80px rgba(14, 165, 233, 0.08);
+      border-color: #cbd5e1;
+    }
+
+    .feature-badge {
+      display: inline-block;
+      padding: 6px 12px;
+      background: linear-gradient(135deg, rgba(99,102,241,0.2), rgba(74,222,128,0.2));
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+      color: #4338ca;
+    }
+
+    .input-icon {
+      transition: all 0.3s ease;
+    }
+
+    .input-field:focus ~ .input-icon,
+    .input-field:focus-within ~ .input-icon {
+      color: #6366f1;
+      transform: scale(1.1);
+    }
+
+    .side-graphic {
+      position: fixed;
+      opacity: 0.08;
+      pointer-events: none;
+      font-size: 300px;
+      line-height: 1;
+    }
+
+    .success-icon {
+      animation: bounce-in 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+    }
+  </style>
+  <style>body { box-sizing: border-box; }</style>
+  <script src="/_sdk/data_sdk.js" type="text/javascript"></script>
+ </head>
+ <body class="h-full">
+  <div id="app" class="h-full w-full overflow-auto bg-pattern" style="min-height:100%;"><!-- Side Graphics -->
+   <div class="side-graphic" style="top: 10%; left: 5%; color: #0ea5e9;">
+    📦
+   </div>
+   <div class="side-graphic" style="bottom: 15%; right: 8%; color: #0ea5e9;">
+    🏭
+   </div>
+   <div class="side-graphic" style="top: 50%; right: 3%; color: #0ea5e9;">
+    📊
+   </div><!-- Toast Container -->
+   <div id="toast-container" class="fixed top-4 right-4 z-50 flex flex-col gap-2" style="pointer-events:none;"></div><!-- Main Content -->
+   <main id="main-content" class="flex items-center justify-center min-h-full w-full px-4 py-8 relative z-10">
+   </main>
+  </div>
+  <script>
+    // ===== STATE =====
+    const state = {
+      currentPage: 'login', // login | signup | dashboard | products | receipts | deliveries | transfers | adjustments
+      isLoggedIn: false,
+      userRole: '',
+      loading: false,
+      // Login
+      loginEmail: '',
+      loginPassword: '',
+      loginShowPass: false,
+      loginRemember: false,
+      // Signup
+      signupName: '',
+      signupEmail: '',
+      signupPassword: '',
+      signupConfirm: '',
+      signupRole: '',
+      signupShowPass: false,
+      signupShowConfirm: false,
+      // Forgot
+      forgotEmail: '',
+      // OTP
+      otp: ['', '', '', '', '', ''],
+      otpVerified: false,
+      otpAttempts: 0,
+      // New password
+      newPassword: '',
+      newConfirm: '',
+      newShowPass: false,
+      newShowConfirm: false,
+      // Dashboard filters
+      dashboardFilter: 'all',
+      // Product management
+      productSearch: '',
+      productCategory: 'all',
+      productShowForm: false,
+      productFormMode: 'add', // add | edit
+      productEditId: null,
+      productForm: {
+        name: '',
+        sku: '',
+        category: '',
+        quantity: '',
+        min_stock: '',
+        location: '',
+        supplier: ''
+      },
+      // Receipt management
+      receiptShowForm: false,
+      receiptForm: {
+        supplier: '',
+        product_id: '',
+        quantity: ''
+      },
+      receipts: [],
+      // Delivery management
+      deliveryShowForm: false,
+      deliveryForm: {
+        product_id: '',
+        quantity: ''
+      },
+      deliveries: [],
+      // Transfer management
+      transferShowForm: false,
+      transferForm: {
+        from_warehouse: '',
+        to_warehouse: '',
+        product_id: '',
+        quantity: ''
+      },
+      transfers: [],
+      // Adjustment management
+      adjustmentShowForm: false,
+      adjustmentForm: {
+        product_id: '',
+        location: '',
+        actual_count: ''
+      },
+      adjustments: [],
+      // Staff tasks
+      staffTasks: [],
+      staffShowTaskForm: false,
+      staffTaskForm: {
+        type: '', // transfer | picking | shelving | counting
+        product_id: '',
+        quantity: '',
+        from_location: '',
+        to_location: ''
+      },
+      // Registered emails (simulated)
+      registeredEmails: ['admin@waremind.com', 'staff@waremind.com'],
+      // Data
+      products: [],
+      warehouses: ['Warehouse A', 'Warehouse B', 'Warehouse C'],
+      suppliers: ['Supplier One', 'Supplier Two', 'Supplier Three'],
+      categories: ['Electronics', 'Clothing', 'Food', 'Furniture', 'Other'],
+      // Errors
+      errors: {}
+    };
+
+    // ===== CONFIG =====
+    const defaultConfig = {
+      app_title: 'WareMind',
+      app_tagline: 'Intelligent Warehouse Management',
+      background_color: '#f8fafc',
+      surface_color: '#ffffff',
+      text_color: '#1e293b',
+      primary_action: '#0ea5e9',
+      secondary_action: '#64748b',
+      font_family: 'DM Sans',
+      font_size: 15
+    };
+
+    // ===== TOAST =====
+    function showToast(message, type = 'success') {
+      const container = document.getElementById('toast-container');
+      const toast = document.createElement('div');
+      toast.style.pointerEvents = 'auto';
+      const colors = {
+        success: 'bg-emerald-500',
+        error: 'bg-red-500',
+        info: 'bg-brand-500'
+      };
+      const icons = {
+        success: 'check-circle',
+        error: 'alert-circle',
+        info: 'info'
+      };
+      toast.className = `toast-enter flex items-center gap-3 px-5 py-3 rounded-xl text-white shadow-lg ${colors[type]}`;
+      toast.innerHTML = `<i data-lucide="${icons[type]}" style="width:20px;height:20px;"></i><span class="font-medium text-sm">${message}</span>`;
+      container.appendChild(toast);
+      lucide.createIcons();
+      setTimeout(() => {
+        toast.className = toast.className.replace('toast-enter', 'toast-exit');
+        setTimeout(() => toast.remove(), 300);
+      }, 3500);
+    }
+
+    // ===== VALIDATION =====
+    function validateEmail(email) {
+      return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+    }
+
+    function validateLoginForm() {
+      const errors = {};
+      if (!state.loginEmail) errors.loginEmail = 'Email is required';
+      else if (!validateEmail(state.loginEmail)) errors.loginEmail = 'Enter a valid email';
+      if (!state.loginPassword) errors.loginPassword = 'Password is required';
+      else if (state.loginPassword.length < 8) errors.loginPassword = 'Password must be at least 8 characters';
+      state.errors = errors;
+      return Object.keys(errors).length === 0;
+    }
+
+    function validateSignupForm() {
+      const errors = {};
+      if (!state.signupName.trim()) errors.signupName = 'Full name is required';
+      if (!state.signupEmail) errors.signupEmail = 'Email is required';
+      else if (!validateEmail(state.signupEmail)) errors.signupEmail = 'Enter a valid email';
+      else if (state.registeredEmails.includes(state.signupEmail.toLowerCase())) errors.signupEmail = 'Email already registered';
+      if (!state.signupPassword) errors.signupPassword = 'Password is required';
+      else if (state.signupPassword.length < 8) errors.signupPassword = 'Minimum 8 characters required';
+      if (!state.signupConfirm) errors.signupConfirm = 'Please confirm your password';
+      else if (state.signupPassword !== state.signupConfirm) errors.signupConfirm = 'Passwords do not match';
+      if (!state.signupRole) errors.signupRole = 'Please select a role';
+      state.errors = errors;
+      return Object.keys(errors).length === 0;
+    }
+
+    // ===== HELPERS =====
+    function isLoginValid() {
+      return state.loginEmail && state.loginPassword;
+    }
+    function isSignupValid() {
+      return state.signupName && state.signupEmail && state.signupPassword && state.signupConfirm && state.signupRole;
+    }
+
+    function simulateDelay(ms = 1500) {
+      return new Promise(r => setTimeout(r, ms));
+    }
+
+    // ===== RENDER HELPERS =====
+    function inputHTML(id, label, type, value, icon, error, extra = '') {
+      const cfg = window.elementSdk ? window.elementSdk.config : defaultConfig;
+      const fontSize = cfg.font_size || defaultConfig.font_size;
+      const textColor = cfg.text_color || defaultConfig.text_color;
+      return `
+        <div class="space-y-1.5">
+          <label for="${id}" class="block font-medium" style="font-size:${fontSize * 0.87}px;color:${textColor};">${label}</label>
+          <div class="relative">
+            <span class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"><i data-lucide="${icon}" style="width:18px;height:18px;"></i></span>
+            <input id="${id}" type="${type}" value="${value.replace(/"/g, '&quot;')}" placeholder="${label}"
+              class="input-field w-full pl-10 pr-${extra ? '10' : '4'} py-3 rounded-xl border-2 ${error ? 'border-red-400' : 'border-slate-200'} bg-white/80 outline-none"
+              style="font-size:${fontSize}px;color:${textColor};"
+              oninput="handleInput('${id}', this.value)" autocomplete="off">
+            ${extra}
+          </div>
+          ${error ? `<p class="text-red-500 text-xs mt-1 flex items-center gap-1"><i data-lucide="alert-triangle" style="width:12px;height:12px;"></i>${error}</p>` : ''}
+        </div>`;
+    }
+
+    function toggleBtn(field) {
+      return `<button type="button" onclick="togglePassword('${field}')" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-brand-500 transition-colors" aria-label="Toggle password visibility">
+        <i data-lucide="${state[field] ? 'eye-off' : 'eye'}" style="width:18px;height:18px;"></i>
+      </button>`;
+    }
+
+    function logoHTML() {
+      const cfg = window.elementSdk ? window.elementSdk.config : defaultConfig;
+      const title = cfg.app_title || defaultConfig.app_title;
+      const tagline = cfg.app_tagline || defaultConfig.app_tagline;
+      const primary = cfg.primary_action || defaultConfig.primary_action;
+      const textColor = cfg.text_color || defaultConfig.text_color;
+      const fontSize = cfg.font_size || defaultConfig.font_size;
+      return `
+        <div class="flex flex-col items-center mb-6">
+          <div class="float-anim mb-4 w-16 h-16 rounded-2xl flex items-center justify-center shadow-lg" style="background:linear-gradient(135deg,${primary},${primary}dd);">
+            <i data-lucide="package" style="width:32px;height:32px;color:#fff;"></i>
+          </div>
+          <h1 class="font-display font-bold tracking-tight" style="font-size:${fontSize * 1.8}px;color:${textColor};">${title}</h1>
+          <p class="mt-1" style="font-size:${fontSize * 0.87}px;color:${cfg.secondary_action || defaultConfig.secondary_action};">${tagline}</p>
+        </div>`;
+    }
+
+    function cardWrap(content, animClass = 'anim-fade-up') {
+      const cfg = window.elementSdk ? window.elementSdk.config : defaultConfig;
+      const surface = cfg.surface_color || defaultConfig.surface_color;
+      return `<div class="${animClass} card-base w-full max-w-md rounded-3xl p-8 shadow-2xl" style="background:${surface}; border: 1px solid rgba(255, 255, 255, 0.3);">${content}</div>`;
+    }
+
+    function spinnerHTML() {
+      return `<span class="spinner inline-block w-5 h-5 border-2 border-white border-t-transparent rounded-full"></span>`;
+    }
+
+    // ===== PAGE RENDERS =====
+    function renderLogin() {
+      const cfg = window.elementSdk ? window.elementSdk.config : defaultConfig;
+      const primary = cfg.primary_action || defaultConfig.primary_action;
+      const secondary = cfg.secondary_action || defaultConfig.secondary_action;
+      const fontSize = cfg.font_size || defaultConfig.font_size;
+      const disabled = !isLoginValid() || state.loading;
+
+      return cardWrap(`
+        ${logoHTML()}
+        <form onsubmit="handleLogin(event)" class="space-y-5" novalidate>
+          ${inputHTML('loginEmail', 'Email Address', 'email', state.loginEmail, 'mail', state.errors.loginEmail)}
+          ${inputHTML('loginPassword', 'Password', state.loginShowPass ? 'text' : 'password', state.loginPassword, 'lock', state.errors.loginPassword, toggleBtn('loginShowPass'))}
+
+          <div class="flex items-center justify-between pt-2">
+            <label class="flex items-center gap-2 cursor-pointer select-none group transition-all" style="font-size:${fontSize * 0.87}px;color:${secondary};">
+              <input type="checkbox" ${state.loginRemember ? 'checked' : ''} onchange="state.loginRemember=this.checked" class="w-4 h-4 rounded border-slate-300 text-brand-500 focus:ring-brand-500 accent-brand-500 cursor-pointer">
+              <span class="group-hover:text-slate-900 transition-colors">Remember me</span>
+            </label>
+            <button type="button" onclick="navigate('forgot')" class="font-medium hover:underline transition-all transform hover:scale-105" style="font-size:${fontSize * 0.87}px;color:${primary};">Forgot Password?</button>
+          </div>
+
+          <button type="submit" ${disabled ? 'disabled' : ''} class="btn-primary w-full py-3 rounded-xl text-white font-semibold flex items-center justify-center gap-2 group" style="font-size:${fontSize}px;">
+            ${state.loading ? spinnerHTML() + ' Signing in...' : '<i data-lucide="log-in" style="width:18px;height:18px;"></i> Sign In'}
+          </button>
+        </form>
+
+        <p class="text-center mt-6" style="font-size:${fontSize * 0.87}px;color:${secondary};">
+          Don't have an account?
+          <button onclick="navigate('signup')" class="font-semibold hover:underline transition-all transform hover:scale-105" style="color:${primary};">Create Account</button>
+        </p>
+
+        <div class="mt-6 pt-6 border-t border-slate-100/40">
+          <div class="grid grid-cols-3 gap-3 text-xs font-medium" style="color:${secondary};">
+            <div class="flex flex-col items-center gap-1 p-2 rounded-lg hover:bg-slate-50/50 transition-all">
+              <i data-lucide="shield-check" style="width:18px;height:18px;color:${primary};"></i>
+              <span>Secure</span>
+            </div>
+            <div class="flex flex-col items-center gap-1 p-2 rounded-lg hover:bg-slate-50/50 transition-all">
+              <i data-lucide="lock" style="width:18px;height:18px;color:#10b981;"></i>
+              <span>Encrypted</span>
+            </div>
+            <div class="flex flex-col items-center gap-1 p-2 rounded-lg hover:bg-slate-50/50 transition-all">
+              <i data-lucide="warehouse" style="width:18px;height:18px;color:#f59e0b;"></i>
+              <span>Ready</span>
+            </div>
+          </div>
+        </div>
+      `);
+    }
+
+    function renderSignup() {
+      const cfg = window.elementSdk ? window.elementSdk.config : defaultConfig;
+      const primary = cfg.primary_action || defaultConfig.primary_action;
+      const secondary = cfg.secondary_action || defaultConfig.secondary_action;
+      const textColor = cfg.text_color || defaultConfig.text_color;
+      const fontSize = cfg.font_size || defaultConfig.font_size;
+      const disabled = !isSignupValid() || state.loading;
+
+      return cardWrap(`
+        ${logoHTML()}
+        <h2 class="text-center font-display font-bold mb-1" style="font-size:${fontSize * 1.4}px;color:${textColor};">Create Account</h2>
+        <p class="text-center mb-6 text-sm" style="color:${secondary};">Join WareMind and manage your warehouse intelligently</p>
+
+        <form onsubmit="handleSignup(event)" class="space-y-4" novalidate>
+          ${inputHTML('signupName', 'Full Name', 'text', state.signupName, 'user', state.errors.signupName)}
+          ${inputHTML('signupEmail', 'Email Address', 'email', state.signupEmail, 'mail', state.errors.signupEmail)}
+          ${inputHTML('signupPassword', 'Password', state.signupShowPass ? 'text' : 'password', state.signupPassword, 'lock', state.errors.signupPassword, toggleBtn('signupShowPass'))}
+          ${inputHTML('signupConfirm', 'Confirm Password', state.signupShowConfirm ? 'text' : 'password', state.signupConfirm, 'shield', state.errors.signupConfirm, toggleBtn('signupShowConfirm'))}
+
+          <div class="space-y-1.5">
+            <label for="signupRole" class="block font-medium" style="font-size:${fontSize * 0.87}px;color:${textColor};">Role</label>
+            <div class="relative">
+              <span class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"><i data-lucide="briefcase" style="width:18px;height:18px;"></i></span>
+              <select id="signupRole" onchange="handleInput('signupRole', this.value)"
+                class="input-field w-full pl-10 pr-4 py-3 rounded-xl border-2 ${state.errors.signupRole ? 'border-red-400' : 'border-slate-200'} bg-white/80 outline-none appearance-none cursor-pointer"
+                style="font-size:${fontSize}px;color:${textColor};">
+                <option value="" ${!state.signupRole ? 'selected' : ''} disabled>Select your role</option>
+                <option value="inventory_manager" ${state.signupRole === 'inventory_manager' ? 'selected' : ''}>📦 Inventory Manager</option>
+                <option value="warehouse_staff" ${state.signupRole === 'warehouse_staff' ? 'selected' : ''}>🏭 Warehouse Staff</option>
+              </select>
+              <span class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none"><i data-lucide="chevron-down" style="width:18px;height:18px;"></i></span>
+            </div>
+            ${state.errors.signupRole ? `<p class="text-red-500 text-xs mt-1 flex items-center gap-1"><i data-lucide="alert-triangle" style="width:12px;height:12px;"></i>${state.errors.signupRole}</p>` : ''}
+          </div>
+
+          <div class="pt-2 text-xs" style="color:${secondary};">
+            <div class="flex items-center gap-2"><i data-lucide="check-circle-2" style="width:14px;height:14px;color:#10b981;"></i> <span>Strong password (8+ characters)</span></div>
+            <div class="flex items-center gap-2 mt-1"><i data-lucide="check-circle-2" style="width:14px;height:14px;color:#10b981;"></i> <span>Secure encryption enabled</span></div>
+          </div>
+
+          <button type="submit" ${disabled ? 'disabled' : ''} class="btn-primary w-full py-3 rounded-xl text-white font-semibold flex items-center justify-center gap-2" style="font-size:${fontSize}px;">
+            ${state.loading ? spinnerHTML() + ' Creating Account...' : '<i data-lucide="user-plus" style="width:18px;height:18px;"></i> Create Account'}
+          </button>
+        </form>
+
+        <p class="text-center mt-6" style="font-size:${fontSize * 0.87}px;color:${secondary};">
+          Already have an account?
+          <button onclick="navigate('login')" class="font-semibold hover:underline transition-all transform hover:scale-105" style="color:${primary};">Sign In</button>
+        </p>
+      `, 'anim-slide-right');
+    }
+
+    function renderForgot() {
+      const cfg = window.elementSdk ? window.elementSdk.config : defaultConfig;
+      const primary = cfg.primary_action || defaultConfig.primary_action;
+      const secondary = cfg.secondary_action || defaultConfig.secondary_action;
+      const textColor = cfg.text_color || defaultConfig.text_color;
+      const fontSize = cfg.font_size || defaultConfig.font_size;
+
+      return cardWrap(`
+        ${logoHTML()}
+        <h2 class="text-center font-display font-bold mb-1" style="font-size:${fontSize * 1.4}px;color:${textColor};">Reset Password</h2>
+        <p class="text-center mb-6" style="font-size:${fontSize * 0.87}px;color:${secondary};">Enter your email to receive an OTP code</p>
+
+        <!-- Steps -->
+        <div class="flex items-center justify-center gap-3 mb-6">
+          <div class="step-dot active"></div>
+          <div class="w-8 h-0.5 bg-slate-200"></div>
+          <div class="step-dot"></div>
+          <div class="w-8 h-0.5 bg-slate-200"></div>
+          <div class="step-dot"></div>
+        </div>
+
+        <form onsubmit="handleForgot(event)" class="space-y-5" novalidate>
+          ${inputHTML('forgotEmail', 'Email Address', 'email', state.forgotEmail, 'mail', state.errors.forgotEmail)}
+
+          <button type="submit" ${!state.forgotEmail || state.loading ? 'disabled' : ''} class="btn-primary w-full py-3 rounded-xl text-white font-semibold flex items-center justify-center gap-2" style="font-size:${fontSize}px;">
+            ${state.loading ? spinnerHTML() + ' Sending OTP...' : '<i data-lucide="send" style="width:18px;height:18px;"></i> Send OTP Code'}
+          </button>
+        </form>
+
+        <p class="text-center mt-6" style="font-size:${fontSize * 0.87}px;color:${secondary};">
+          <button onclick="navigate('login')" class="font-semibold hover:underline flex items-center gap-1 mx-auto" style="color:${primary};"><i data-lucide="arrow-left" style="width:16px;height:16px;"></i> Back to Sign In</button>
+        </p>
+      `, 'anim-slide-left');
+    }
+
+    function renderOTP() {
+      const cfg = window.elementSdk ? window.elementSdk.config : defaultConfig;
+      const primary = cfg.primary_action || defaultConfig.primary_action;
+      const secondary = cfg.secondary_action || defaultConfig.secondary_action;
+      const textColor = cfg.text_color || defaultConfig.text_color;
+      const fontSize = cfg.font_size || defaultConfig.font_size;
+      const otpFilled = state.otp.every(d => d !== '');
+
+      const otpInputs = state.otp.map((v, i) =>
+        `<input type="text" maxlength="1" value="${v}" class="otp-input" style="color:${textColor};"
+          oninput="handleOTPInput(${i}, this)" onkeydown="handleOTPKey(event, ${i})" data-otp="${i}" inputmode="numeric">`
+      ).join('');
+
+      return cardWrap(`
+        ${logoHTML()}
+        <h2 class="text-center font-display font-bold mb-1" style="font-size:${fontSize * 1.4}px;color:${textColor};">Enter OTP Code</h2>
+        <p class="text-center mb-2" style="font-size:${fontSize * 0.87}px;color:${secondary};">We sent a 6-digit code to</p>
+        <p class="text-center mb-6 font-semibold" style="font-size:${fontSize * 0.93}px;color:${primary};">${state.forgotEmail}</p>
+
+        <div class="flex items-center justify-center gap-3 mb-6">
+          <div class="step-dot completed"></div>
+          <div class="w-8 h-0.5 bg-emerald-300"></div>
+          <div class="step-dot active"></div>
+          <div class="w-8 h-0.5 bg-slate-200"></div>
+          <div class="step-dot ${state.otpVerified ? 'completed' : ''}"></div>
+        </div>
+
+        <form onsubmit="handleOTPSubmit(event)" class="space-y-5" novalidate>
+          <div class="flex justify-center gap-2">${otpInputs}</div>
+          ${state.errors.otp ? `<p class="text-red-500 text-xs text-center flex items-center justify-center gap-1"><i data-lucide="alert-triangle" style="width:12px;height:12px;"></i>${state.errors.otp}</p>` : ''}
+
+          <button type="submit" ${!otpFilled || state.loading ? 'disabled' : ''} class="btn-primary w-full py-3 rounded-xl text-white font-semibold flex items-center justify-center gap-2" style="font-size:${fontSize}px;">
+            ${state.loading ? spinnerHTML() + ' Verifying...' : '<i data-lucide="check-circle" style="width:18px;height:18px;"></i> Verify OTP'}
+          </button>
+
+          <p class="text-center" style="font-size:${fontSize * 0.8}px;color:${secondary};">
+            <button type="button" onclick="resendOTP()" class="font-semibold hover:underline" style="color:${primary};">Didn't receive code? Resend</button>
+          </p>
+        </form>
+      `, 'anim-fade-up');
+    }
+
+    function renderNewPassword() {
+      const cfg = window.elementSdk ? window.elementSdk.config : defaultConfig;
+      const primary = cfg.primary_action || defaultConfig.primary_action;
+      const secondary = cfg.secondary_action || defaultConfig.secondary_action;
+      const textColor = cfg.text_color || defaultConfig.text_color;
+      const fontSize = cfg.font_size || defaultConfig.font_size;
+      const disabled = !state.newPassword || !state.newConfirm || state.loading;
+
+      return cardWrap(`
+        ${logoHTML()}
+        <h2 class="text-center font-display font-bold mb-1" style="font-size:${fontSize * 1.4}px;color:${textColor};">New Password</h2>
+        <p class="text-center mb-6" style="font-size:${fontSize * 0.87}px;color:${secondary};">Create a strong new password</p>
+
+        <div class="flex items-center justify-center gap-3 mb-6">
+          <div class="step-dot completed"></div>
+          <div class="w-8 h-0.5 bg-emerald-300"></div>
+          <div class="step-dot completed"></div>
+          <div class="w-8 h-0.5 bg-emerald-300"></div>
+          <div class="step-dot active"></div>
+        </div>
+
+        <form onsubmit="handleNewPassword(event)" class="space-y-5" novalidate>
+          ${inputHTML('newPassword', 'New Password', state.newShowPass ? 'text' : 'password', state.newPassword, 'lock', state.errors.newPassword, toggleBtn('newShowPass'))}
+          ${inputHTML('newConfirm', 'Confirm Password', state.newShowConfirm ? 'text' : 'password', state.newConfirm, 'shield', state.errors.newConfirm, toggleBtn('newShowConfirm'))}
+
+          <button type="submit" ${disabled ? 'disabled' : ''} class="btn-primary w-full py-3 rounded-xl text-white font-semibold flex items-center justify-center gap-2" style="font-size:${fontSize}px;">
+            ${state.loading ? spinnerHTML() + ' Resetting...' : '<i data-lucide="key" style="width:18px;height:18px;"></i> Reset Password'}
+          </button>
+        </form>
+      `, 'anim-fade-up');
+    }
+
+    function renderSuccess() {
+      const cfg = window.elementSdk ? window.elementSdk.config : defaultConfig;
+      const primary = cfg.primary_action || defaultConfig.primary_action;
+      const textColor = cfg.text_color || defaultConfig.text_color;
+      const fontSize = cfg.font_size || defaultConfig.font_size;
+
+      return cardWrap(`
+        <div class="text-center py-4">
+          <div class="mx-auto w-24 h-24 rounded-full bg-gradient-to-br from-emerald-100 to-emerald-200 flex items-center justify-center mb-6 success-icon shadow-lg">
+            <i data-lucide="check-circle-2" style="width:48px;height:48px;color:#10b981;"></i>
+          </div>
+          <h2 class="font-display font-bold mb-3" style="font-size:${fontSize * 1.8}px;color:${textColor};">Password Reset!</h2>
+          <p class="mb-2 text-sm" style="color:${cfg.secondary_action || defaultConfig.secondary_action};">Your password has been successfully updated.</p>
+          <p class="mb-8 text-xs" style="color:${cfg.secondary_action || defaultConfig.secondary_action};">You can now sign in with your new credentials.</p>
+          
+          <div class="bg-gradient-to-r from-emerald-50 to-teal-50 p-4 rounded-xl mb-6 border border-emerald-200">
+            <div class="flex items-center justify-center gap-2 text-emerald-700">
+              <i data-lucide="check" style="width:18px;height:18px;"></i>
+              <span class="text-sm font-medium">Ready to access your dashboard</span>
+            </div>
+          </div>
+          
+          <button onclick="navigate('login')" class="btn-primary w-full py-3 rounded-xl text-white font-semibold flex items-center justify-center gap-2" style="font-size:${fontSize}px;">
+            <i data-lucide="log-in" style="width:18px;height:18px;"></i> Back to Sign In
+          </button>
+        </div>
+      `, 'anim-fade-up');
+    }
+
+    // ===== NAVIGATION =====
+    function navigate(page) {
+      state.currentPage = page;
+      state.errors = {};
+      state.loading = false;
+      render();
+    }
+
+    // ===== EVENT HANDLERS =====
+    function handleInput(id, value) {
+      // Map input IDs to state keys
+      state[id] = value;
+      // Clear specific error
+      if (state.errors[id]) {
+        delete state.errors[id];
+      }
+      // Light re-render for button states
+      updateButtons();
+    }
+
+    function togglePassword(field) {
+      state[field] = !state[field];
+      render();
+    }
+
+    async function handleLogin(e) {
+      e.preventDefault();
+      if (!validateLoginForm()) { render(); return; }
+      state.loading = true;
+      render();
+
+      // API placeholder
+      await simulateDelay();
+
+      // Simulate: check registered emails
+      if (!state.registeredEmails.includes(state.loginEmail.toLowerCase())) {
+        state.loading = false;
+        state.errors.loginEmail = 'No account found with this email';
+        render();
+        showToast('Invalid credentials. Please try again.', 'error');
+        return;
+      }
+
+      state.loading = false;
+      state.isLoggedIn = true;
+      state.userRole = 'manager';
+      showToast('Welcome back! Loading dashboard...', 'success');
+      render();
+    }
+
+    async function handleSignup(e) {
+      e.preventDefault();
+      if (!validateSignupForm()) { render(); return; }
+      state.loading = true;
+      render();
+
+      await simulateDelay();
+
+      // Simulate registration
+      state.registeredEmails.push(state.signupEmail.toLowerCase());
+      state.loading = false;
+      showToast('Account created successfully!', 'success');
+      // Reset signup fields
+      state.signupName = '';
+      state.signupEmail = '';
+      state.signupPassword = '';
+      state.signupConfirm = '';
+      state.signupRole = '';
+      navigate('login');
+    }
+
+    async function handleForgot(e) {
+      e.preventDefault();
+      const errors = {};
+      if (!state.forgotEmail) errors.forgotEmail = 'Email is required';
+      else if (!validateEmail(state.forgotEmail)) errors.forgotEmail = 'Enter a valid email';
+      else if (!state.registeredEmails.includes(state.forgotEmail.toLowerCase())) errors.forgotEmail = 'No account found with this email';
+      if (Object.keys(errors).length) {
+        state.errors = errors;
+        render();
+        return;
+      }
+      state.loading = true;
+      render();
+
+      await simulateDelay(1200);
+
+      state.loading = false;
+      state.otp = ['', '', '', '', '', ''];
+      state.otpVerified = false;
+      state.otpAttempts = 0;
+      showToast('OTP sent to your email!', 'info');
+      navigate('otp');
+    }
+
+
+
+    function handleOTPInput(index, el) {
+      const val = el.value.replace(/\D/g, '');
+      state.otp[index] = val.slice(-1);
+      el.value = state.otp[index];
+      if (val && index < 5) {
+        const next = document.querySelector(`[data-otp="${index + 1}"]`);
+        if (next) next.focus();
+      }
+      updateButtons();
+    }
+
+    function handleOTPKey(e, index) {
+      if (e.key === 'Backspace' && !state.otp[index] && index > 0) {
+        const prev = document.querySelector(`[data-otp="${index - 1}"]`);
+        if (prev) { prev.focus(); state.otp[index - 1] = ''; prev.value = ''; }
+      }
+    }
+
+    async function handleOTPSubmit(e) {
+      e.preventDefault();
+      if (state.otpExpired) {
+        showToast('OTP has expired. Please request a new one.', 'error');
+        return;
+      }
+
+      const code = state.otp.join('');
+      if (code.length !== 6) return;
+
+      state.loading = true;
+      render();
+      await simulateDelay(1000);
+
+      // Simulate OTP check (accept any 6 digits for demo)
+      state.otpAttempts++;
+      state.loading = false;
+      state.otpVerified = true;
+      showToast('OTP verified successfully! Set your new password.', 'success');
+      navigate('newpassword');
+    }
+
+    function resendOTP() {
+      if (true) {
+        state.otp = ['', '', '', '', '', ''];
+        state.otpVerified = false;
+        state.otpAttempts = 0;
+        showToast('New OTP sent!', 'info');
+        render();
+      }
+    }
+
+    async function handleNewPassword(e) {
+      e.preventDefault();
+      const errors = {};
+      if (!state.newPassword) errors.newPassword = 'Password is required';
+      else if (state.newPassword.length < 8) errors.newPassword = 'Minimum 8 characters required';
+      if (!state.newConfirm) errors.newConfirm = 'Please confirm your password';
+      else if (state.newPassword !== state.newConfirm) errors.newConfirm = 'Passwords do not match';
+      if (Object.keys(errors).length) {
+        state.errors = errors;
+        render();
+        return;
+      }
+
+      state.loading = true;
+      render();
+      await simulateDelay();
+
+      state.loading = false;
+      showToast('Password reset successfully!', 'success');
+      state.newPassword = '';
+      state.newConfirm = '';
+      navigate('success');
+    }
+
+    // ===== DASHBOARD FUNCTIONS =====
+    function navigateDashboard(page) {
+      state.currentPage = page;
+      render();
+    }
+
+    function logout() {
+      state.isLoggedIn = false;
+      state.currentPage = 'login';
+      state.userRole = '';
+      state.loginEmail = '';
+      state.loginPassword = '';
+      state.products = [];
+      showToast('Logged out successfully', 'info');
+      render();
+    }
+
+    // ===== STAFF TASK FUNCTIONS =====
+    function toggleStaffTaskForm() {
+      state.staffShowTaskForm = !state.staffShowTaskForm;
+      if (!state.staffShowTaskForm) {
+        state.staffTaskForm = { type: '', product_id: '', quantity: '', from_location: '', to_location: '' };
+      }
+      render();
+    }
+
+    function completeStaffTask(id) {
+      const task = state.staffTasks.find(t => t.task_id === id);
+      if (task) {
+        task.completed = true;
+        showToast('Task completed!', 'success');
+        render();
+      }
+    }
+
+    async function handleStaffTaskSubmit(e) {
+      e.preventDefault();
+      state.loading = true;
+      render();
+      await simulateDelay(800);
+
+      const newTask = {
+        task_id: Date.now().toString(),
+        task_type: state.staffTaskForm.type,
+        product_id: state.staffTaskForm.product_id,
+        quantity: parseInt(state.staffTaskForm.quantity),
+        from_location: state.staffTaskForm.from_location,
+        to_location: state.staffTaskForm.to_location,
+        completed: false,
+        created_at: new Date().toISOString()
+      };
+      state.staffTasks.push(newTask);
+      showToast('Task assigned successfully!', 'success');
+
+      state.loading = false;
+      state.staffShowTaskForm = false;
+      state.staffTaskForm = { type: '', product_id: '', quantity: '', from_location: '', to_location: '' };
+      render();
+    }
+
+    // Product functions
+    function toggleProductForm() {
+      state.productShowForm = !state.productShowForm;
+      if (!state.productShowForm) {
+        state.productFormMode = 'add';
+        state.productEditId = null;
+        state.productForm = { name: '', sku: '', category: '', quantity: '', min_stock: '', location: '', supplier: '' };
+      }
+      render();
+    }
+
+    function editProduct(id) {
+      const product = state.products.find(p => p.id === id);
+      if (product) {
+        state.productFormMode = 'edit';
+        state.productEditId = id;
+        state.productForm = { ...product };
+        state.productShowForm = true;
+        render();
+      }
+    }
+
+    function deleteProduct(id) {
+      state.products = state.products.filter(p => p.id !== id);
+      showToast('Product deleted', 'info');
+      render();
+    }
+
+    async function handleProductSubmit(e) {
+      e.preventDefault();
+      state.loading = true;
+      render();
+      await simulateDelay(800);
+
+      if (state.productFormMode === 'add') {
+        const newProduct = {
+          id: Date.now().toString(),
+          ...state.productForm,
+          quantity: parseInt(state.productForm.quantity),
+          min_stock: parseInt(state.productForm.min_stock),
+          last_updated: new Date().toISOString()
+        };
+        state.products.push(newProduct);
+        showToast('Product added successfully!', 'success');
+      } else {
+        const idx = state.products.findIndex(p => p.id === state.productEditId);
+        if (idx !== -1) {
+          state.products[idx] = {
+            ...state.productForm,
+            quantity: parseInt(state.productForm.quantity),
+            min_stock: parseInt(state.productForm.min_stock),
+            last_updated: new Date().toISOString()
+          };
+          showToast('Product updated successfully!', 'success');
+        }
+      }
+
+      state.loading = false;
+      state.productShowForm = false;
+      state.productFormMode = 'add';
+      state.productEditId = null;
+      state.productForm = { name: '', sku: '', category: '', quantity: '', min_stock: '', location: '', supplier: '' };
+      render();
+    }
+
+    // Receipt functions
+    function toggleReceiptForm() {
+      state.receiptShowForm = !state.receiptShowForm;
+      if (!state.receiptShowForm) {
+        state.receiptForm = { supplier: '', product_id: '', quantity: '' };
+      }
+      render();
+    }
+
+    async function handleReceiptSubmit(e) {
+      e.preventDefault();
+      state.loading = true;
+      render();
+      await simulateDelay(800);
+
+      const product = state.products.find(p => p.id === state.receiptForm.product_id);
+      if (product) {
+        product.quantity += parseInt(state.receiptForm.quantity);
+        const receipt = {
+          id: Date.now().toString(),
+          supplier: state.receiptForm.supplier,
+          product_id: state.receiptForm.product_id,
+          product_name: product.name,
+          quantity: parseInt(state.receiptForm.quantity),
+          status: 'pending',
+          created_at: new Date().toISOString()
+        };
+        state.receipts.push(receipt);
+        showToast(`Receipt created! +${state.receiptForm.quantity} units added`, 'success');
+      }
+
+      state.loading = false;
+      state.receiptShowForm = false;
+      state.receiptForm = { supplier: '', product_id: '', quantity: '' };
+      render();
+    }
+
+    // Delivery functions
+    function toggleDeliveryForm() {
+      state.deliveryShowForm = !state.deliveryShowForm;
+      if (!state.deliveryShowForm) {
+        state.deliveryForm = { product_id: '', quantity: '' };
+      }
+      render();
+    }
+
+    async function handleDeliverySubmit(e) {
+      e.preventDefault();
+      state.loading = true;
+      render();
+      await simulateDelay(800);
+
+      const product = state.products.find(p => p.id === state.deliveryForm.product_id);
+      if (product && product.quantity >= parseInt(state.deliveryForm.quantity)) {
+        product.quantity -= parseInt(state.deliveryForm.quantity);
+        const delivery = {
+          id: Date.now().toString(),
+          product_id: state.deliveryForm.product_id,
+          product_name: product.name,
+          quantity: parseInt(state.deliveryForm.quantity),
+          status: 'pending',
+          created_at: new Date().toISOString()
+        };
+        state.deliveries.push(delivery);
+        showToast(`Delivery created! -${state.deliveryForm.quantity} units shipped`, 'success');
+      } else {
+        showToast('Insufficient stock for delivery', 'error');
+        state.loading = false;
+        render();
+        return;
+      }
+
+      state.loading = false;
+      state.deliveryShowForm = false;
+      state.deliveryForm = { product_id: '', quantity: '' };
+      render();
+    }
+
+    // Transfer functions
+    function toggleTransferForm() {
+      state.transferShowForm = !state.transferShowForm;
+      if (!state.transferShowForm) {
+        state.transferForm = { from_warehouse: '', to_warehouse: '', product_id: '', quantity: '' };
+      }
+      render();
+    }
+
+    async function handleTransferSubmit(e) {
+      e.preventDefault();
+      state.loading = true;
+      render();
+      await simulateDelay(800);
+
+      const product = state.products.find(p => p.id === state.transferForm.product_id);
+      if (product && product.quantity >= parseInt(state.transferForm.quantity)) {
+        product.quantity -= parseInt(state.transferForm.quantity);
+        const transfer = {
+          id: Date.now().toString(),
+          product_id: state.transferForm.product_id,
+          product_name: product.name,
+          from_warehouse: state.transferForm.from_warehouse,
+          to_warehouse: state.transferForm.to_warehouse,
+          quantity: parseInt(state.transferForm.quantity),
+          status: 'pending',
+          created_at: new Date().toISOString()
+        };
+        state.transfers.push(transfer);
+        showToast(`Transfer created! ${state.transferForm.quantity} units moved from ${state.transferForm.from_warehouse} to ${state.transferForm.to_warehouse}`, 'success');
+      } else {
+        showToast('Insufficient stock for transfer', 'error');
+        state.loading = false;
+        render();
+        return;
+      }
+
+      state.loading = false;
+      state.transferShowForm = false;
+      state.transferForm = { from_warehouse: '', to_warehouse: '', product_id: '', quantity: '' };
+      render();
+    }
+
+    // Adjustment functions
+    function toggleAdjustmentForm() {
+      state.adjustmentShowForm = !state.adjustmentShowForm;
+      if (!state.adjustmentShowForm) {
+        state.adjustmentForm = { product_id: '', location: '', actual_count: '' };
+      }
+      render();
+    }
+
+    async function handleAdjustmentSubmit(e) {
+      e.preventDefault();
+      state.loading = true;
+      render();
+      await simulateDelay(800);
+
+      const product = state.products.find(p => p.id === state.adjustmentForm.product_id);
+      if (product) {
+        const oldQty = product.quantity;
+        const newQty = parseInt(state.adjustmentForm.actual_count);
+        product.quantity = newQty;
+        const diff = newQty - oldQty;
+        const adjustment = {
+          id: Date.now().toString(),
+          product_id: state.adjustmentForm.product_id,
+          product_name: product.name,
+          location: state.adjustmentForm.location,
+          old_quantity: oldQty,
+          new_quantity: newQty,
+          difference: diff,
+          status: 'completed',
+          created_at: new Date().toISOString()
+        };
+        state.adjustments.push(adjustment);
+        showToast(`Adjustment applied! Qty changed from ${oldQty} to ${newQty}`, 'success');
+      }
+
+      state.loading = false;
+      state.adjustmentShowForm = false;
+      state.adjustmentForm = { product_id: '', location: '', actual_count: '' };
+      render();
+    }
+
+    function updateButtons() {
+      // Quick update for submit button disabled states without full re-render
+      const btns = document.querySelectorAll('button[type="submit"]');
+      btns.forEach(btn => {
+        if (state.currentPage === 'login') btn.disabled = !isLoginValid() || state.loading;
+        else if (state.currentPage === 'signup') btn.disabled = !isSignupValid() || state.loading;
+      });
+    }
+
+    // ===== MAIN RENDER =====
+    function render() {
+      const main = document.getElementById('main-content');
+      const cfg = window.elementSdk ? window.elementSdk.config : defaultConfig;
+      const bg = cfg.background_color || defaultConfig.background_color;
+
+      document.getElementById('app').style.background = bg;
+
+      // If logged in, show dashboard layout
+      if (state.isLoggedIn) {
+        main.innerHTML = renderDashboardLayout();
+      } else {
+        // Auth pages
+        const pages = {
+          login: renderLogin,
+          signup: renderSignup,
+          forgot: renderForgot,
+          otp: renderOTP,
+          newpassword: renderNewPassword,
+          success: renderSuccess
+        };
+
+        main.innerHTML = (pages[state.currentPage] || renderLogin)();
+      }
+      lucide.createIcons();
+    }
+
+    function renderDashboardLayout() {
+      const cfg = window.elementSdk ? window.elementSdk.config : defaultConfig;
+      const primary = cfg.primary_action || defaultConfig.primary_action;
+      const secondary = cfg.secondary_action || defaultConfig.secondary_action;
+      const textColor = cfg.text_color || defaultConfig.text_color;
+      const surface = cfg.surface_color || defaultConfig.surface_color;
+      const fontSize = cfg.font_size || defaultConfig.font_size;
+
+      // Show different nav based on role
+      let navItems = [];
+      if (state.userRole === 'manager') {
+        navItems = [
+          { page: 'dashboard', label: 'Dashboard', icon: 'grid' },
+          { page: 'products', label: 'Products', icon: 'package' },
+          { page: 'receipts', label: 'Receipts', icon: 'inbox' },
+          { page: 'deliveries', label: 'Deliveries', icon: 'truck' },
+          { page: 'transfers', label: 'Transfers', icon: 'arrow-right-left' },
+          { page: 'adjustments', label: 'Adjustments', icon: 'edit' }
+        ];
+      } else {
+        // Staff dashboard
+        navItems = [
+          { page: 'staff_dashboard', label: 'My Tasks', icon: 'list-check' },
+          { page: 'staff_picking', label: 'Picking', icon: 'box' },
+          { page: 'staff_shelving', label: 'Shelving', icon: 'layers' },
+          { page: 'staff_transfers', label: 'Transfers', icon: 'arrow-right-left' },
+          { page: 'staff_counting', label: 'Stock Count', icon: 'calculator' }
+        ];
+      }
+
+      const pageMap = {
+        dashboard: renderDashboard,
+        products: renderProducts,
+        receipts: renderReceipts,
+        deliveries: renderDeliveries,
+        transfers: renderTransfers,
+        adjustments: renderAdjustments,
+        staff_dashboard: renderStaffDashboard,
+        staff_picking: renderStaffPicking,
+        staff_shelving: renderStaffShelving,
+        staff_transfers: renderStaffTransfers,
+        staff_counting: renderStaffCounting
+      };
+
+      const pageRenderer = pageMap[state.currentPage] || renderDashboard;
+
+      return `
+        <div class="flex h-full w-full overflow-hidden" style="background:${surface};">
+          <!-- Sidebar -->
+          <div class="w-64 border-r" style="border-color:rgba(0,0,0,0.1);background:${surface};">
+            <div class="p-6">
+              <div class="flex items-center gap-3 mb-8">
+                <div class="w-10 h-10 rounded-lg flex items-center justify-center" style="background:linear-gradient(135deg,${primary},${primary}dd);">
+                  <i data-lucide="warehouse" style="width:20px;height:20px;color:#fff;"></i>
+                </div>
+                <div>
+                  <h1 class="font-bold" style="font-size:${fontSize * 1.1}px;color:${textColor};">WareMind</h1>
+                  <p style="font-size:${fontSize * 0.75}px;color:${secondary};">${state.userRole === 'manager' ? 'Manager' : 'Staff'}</p>
+                </div>
+              </div>
+              <nav class="space-y-2">
+                ${navItems.map(item => `
+                  <button onclick="navigateDashboard('${item.page}')" 
+                    class="w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all group ${state.currentPage === item.page ? 'font-semibold' : 'font-medium'}"
+                    style="${state.currentPage === item.page ? `background:linear-gradient(135deg,${primary}22,${primary}11);color:${primary};border-left:3px solid ${primary};` : `color:${secondary};`}">
+                    <i data-lucide="${item.icon}" style="width:18px;height:18px;"></i>
+                    <span>${item.label}</span>
+                  </button>
+                `).join('')}
+              </nav>
+            </div>
+            <div class="absolute bottom-6 left-6 right-10">
+              <button onclick="logout()" class="w-full flex items-center gap-3 px-4 py-3 rounded-lg font-medium transition-all hover:bg-red-50" style="color:${secondary};">
+                <i data-lucide="log-out" style="width:18px;height:18px;"></i>
+                <span>Logout</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Main Content -->
+          <div class="flex-1 overflow-auto">
+            ${pageRenderer()}
+          </div>
+        </div>
+      `;
+    }
+
+    // ===== DASHBOARD PAGE =====
+    function renderDashboard() {
+      const cfg = window.elementSdk ? window.elementSdk.config : defaultConfig;
+      const primary = cfg.primary_action || defaultConfig.primary_action;
+      const secondary = cfg.secondary_action || defaultConfig.secondary_action;
+      const textColor = cfg.text_color || defaultConfig.text_color;
+      const surface = cfg.surface_color || defaultConfig.surface_color;
+      const fontSize = cfg.font_size || defaultConfig.font_size;
+
+      const totalProducts = state.products.length;
+      const lowStock = state.products.filter(p => p.quantity <= p.min_stock).length;
+      const totalValue = state.products.reduce((sum, p) => sum + (p.quantity * 10), 0); // Simulated $10 per unit
+      const outOfStock = state.products.filter(p => p.quantity === 0).length;
+      const avgTurnover = (totalProducts > 0) ? Math.floor(Math.random() * 100 + 20) : 0;
+      
+      // Category breakdown
+      const categoryBreakdown = {};
+      state.products.forEach(p => {
+        categoryBreakdown[p.category] = (categoryBreakdown[p.category] || 0) + p.quantity;
+      });
+
+      // Status breakdown
+      const inStockCount = state.products.filter(p => p.quantity > p.min_stock).length;
+      const lowStockCount = state.products.filter(p => p.quantity > 0 && p.quantity <= p.min_stock).length;
+
+      // Recent activities (simulated)
+      const activities = [
+        { type: 'receipt', msg: 'Received 50 units of Electronics', time: '2 hours ago', color: '#10b981' },
+        { type: 'delivery', msg: 'Shipped 25 units to Customer', time: '4 hours ago', color: '#3b82f6' },
+        { type: 'adjustment', msg: 'Stock adjustment applied', time: '6 hours ago', color: '#f59e0b' }
+      ];
+
+      const topProducts = state.products.slice(0, 5).sort((a, b) => b.quantity - a.quantity);
+
+      return `
+        <div class="p-8 overflow-auto" style="height:100%;">
+          <!-- Header -->
+          <div class="mb-8">
+            <h1 class="font-bold mb-2" style="font-size:${fontSize * 2.2}px;color:${textColor};">Dashboard</h1>
+            <p style="color:${secondary};font-size:${fontSize * 0.93}px;">Real-time inventory insights and analytics</p>
+          </div>
+
+          <!-- Top KPI Cards with Trends -->
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
+            <!-- Total Products -->
+            <div class="card-base rounded-2xl p-6 overflow-hidden hover:scale-105 transition-transform cursor-pointer" style="border-left:4px solid ${primary};">
+              <div class="flex items-start justify-between mb-6">
+                <div>
+                  <p style="color:${secondary};font-size:${fontSize * 0.85}px;margin-bottom:0.5rem;font-weight:500;">Total Products</p>
+                  <h3 class="font-bold counter-animate" style="font-size:${fontSize * 2.2}px;color:${primary};">${totalProducts}</h3>
+                  <p style="color:${secondary};font-size:${fontSize * 0.75}px;margin-top:0.25rem;">📈 +12% this month</p>
+                </div>
+                <div class="w-12 h-12 rounded-xl flex items-center justify-center" style="background:${primary}22;">
+                  <i data-lucide="boxes" style="width:24px;height:24px;color:${primary};"></i>
+                </div>
+              </div>
+            </div>
+
+            <!-- Low Stock Alert -->
+            <div class="card-base rounded-2xl p-6 overflow-hidden hover:scale-105 transition-transform cursor-pointer" style="border-left:4px solid #f59e0b;">
+              <div class="flex items-start justify-between mb-6">
+                <div>
+                  <p style="color:${secondary};font-size:${fontSize * 0.85}px;margin-bottom:0.5rem;font-weight:500;">Low Stock</p>
+                  <h3 class="font-bold counter-animate" style="font-size:${fontSize * 2.2}px;color:#f59e0b;">${lowStock}</h3>
+                  <p style="color:${secondary};font-size:${fontSize * 0.75}px;margin-top:0.25rem;">⚠️ Needs attention</p>
+                </div>
+                <div class="w-12 h-12 rounded-xl flex items-center justify-center" style="background:#f59e0b22;">
+                  <i data-lucide="alert-triangle" style="width:24px;height:24px;color:#f59e0b;"></i>
+                </div>
+              </div>
+            </div>
+
+            <!-- Out of Stock -->
+            <div class="card-base rounded-2xl p-6 overflow-hidden hover:scale-105 transition-transform cursor-pointer" style="border-left:4px solid #ef4444;">
+              <div class="flex items-start justify-between mb-6">
+                <div>
+                  <p style="color:${secondary};font-size:${fontSize * 0.85}px;margin-bottom:0.5rem;font-weight:500;">Out of Stock</p>
+                  <h3 class="font-bold counter-animate" style="font-size:${fontSize * 2.2}px;color:#ef4444;">${outOfStock}</h3>
+                  <p style="color:${secondary};font-size:${fontSize * 0.75}px;margin-top:0.25rem;">🚨 Critical</p>
+                </div>
+                <div class="w-12 h-12 rounded-xl flex items-center justify-center" style="background:#ef444422;">
+                  <i data-lucide="x-circle" style="width:24px;height:24px;color:#ef4444;"></i>
+                </div>
+              </div>
+            </div>
+
+            <!-- Total Inventory Value -->
+            <div class="card-base rounded-2xl p-6 overflow-hidden hover:scale-105 transition-transform cursor-pointer" style="border-left:4px solid #10b981;">
+              <div class="flex items-start justify-between mb-6">
+                <div>
+                  <p style="color:${secondary};font-size:${fontSize * 0.85}px;margin-bottom:0.5rem;font-weight:500;">Total Value</p>
+                  <h3 class="font-bold counter-animate" style="font-size:${fontSize * 2.2}px;color:#10b981;">$${totalValue.toLocaleString()}</h3>
+                  <p style="color:${secondary};font-size:${fontSize * 0.75}px;margin-top:0.25rem;">💰 Inventory worth</p>
+                </div>
+                <div class="w-12 h-12 rounded-xl flex items-center justify-center" style="background:#10b98122;">
+                  <i data-lucide="dollar-sign" style="width:24px;height:24px;color:#10b981;"></i>
+                </div>
+              </div>
+            </div>
+
+            <!-- Avg Turnover -->
+            <div class="card-base rounded-2xl p-6 overflow-hidden hover:scale-105 transition-transform cursor-pointer" style="border-left:4px solid #8b5cf6;">
+              <div class="flex items-start justify-between mb-6">
+                <div>
+                  <p style="color:${secondary};font-size:${fontSize * 0.85}px;margin-bottom:0.5rem;font-weight:500;">Turnover Rate</p>
+                  <h3 class="font-bold counter-animate" style="font-size:${fontSize * 2.2}px;color:#8b5cf6;">${avgTurnover}%</h3>
+                  <p style="color:${secondary};font-size:${fontSize * 0.75}px;margin-top:0.25rem;">📊 This period</p>
+                </div>
+                <div class="w-12 h-12 rounded-xl flex items-center justify-center" style="background:#8b5cf622;">
+                  <i data-lucide="trending-up" style="width:24px;height:24px;color:#8b5cf6;"></i>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Charts and Analytics Row -->
+          <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+            <!-- Inventory Status Pie Chart -->
+            <div class="card-base rounded-2xl p-6 col-span-1">
+              <h2 class="font-bold mb-6" style="font-size:${fontSize * 1.15}px;color:${textColor};">Stock Status</h2>
+              <div class="flex items-center justify-center" style="height:200px;">
+                <svg viewBox="0 0 200 200" style="width:100%;max-width:150px;">
+                  <!-- Background circle -->
+                  <circle cx="100" cy="100" r="90" fill="none" stroke="rgba(0,0,0,0.05)" stroke-width="20"/>
+                  
+                  <!-- In Stock segment -->
+                  <circle cx="100" cy="100" r="90" fill="none" stroke="#10b981" stroke-width="20"
+                    stroke-dasharray="${Math.floor((inStockCount / totalProducts) * 565)} 565"
+                    stroke-dashoffset="0" stroke-linecap="round" class="chart-animate"
+                    style="transform:rotate(-90deg);transform-origin:100px 100px;"/>
+                  
+                  <!-- Low Stock segment -->
+                  <circle cx="100" cy="100" r="90" fill="none" stroke="#f59e0b" stroke-width="20"
+                    stroke-dasharray="${Math.floor((lowStockCount / totalProducts) * 565)} 565"
+                    stroke-dashoffset="${-Math.floor((inStockCount / totalProducts) * 565)}"
+                    stroke-linecap="round" class="chart-animate"
+                    style="transform:rotate(-90deg);transform-origin:100px 100px;animation-delay:0.3s;"/>
+                  
+                  <!-- Center text -->
+                  <text x="100" y="95" font-size="24" font-weight="bold" text-anchor="middle" fill="${primary}">${inStockCount}</text>
+                  <text x="100" y="115" font-size="12" text-anchor="middle" fill="${secondary}">In Stock</text>
+                </svg>
+              </div>
+              <div class="mt-6 space-y-3 text-sm">
+                <div class="flex items-center justify-between">
+                  <div class="flex items-center gap-2">
+                    <span class="w-3 h-3 rounded-full" style="background:#10b981;"></span>
+                    <span style="color:${secondary};">In Stock</span>
+                  </div>
+                  <span class="font-semibold" style="color:${textColor};">${inStockCount}</span>
+                </div>
+                <div class="flex items-center justify-between">
+                  <div class="flex items-center gap-2">
+                    <span class="w-3 h-3 rounded-full" style="background:#f59e0b;"></span>
+                    <span style="color:${secondary};">Low Stock</span>
+                  </div>
+                  <span class="font-semibold" style="color:${textColor};">${lowStockCount}</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Top Categories Bar Chart -->
+            <div class="card-base rounded-2xl p-6 col-span-1 lg:col-span-2">
+              <div class="flex items-center justify-between mb-6">
+                <h2 class="font-bold" style="font-size:${fontSize * 1.15}px;color:${textColor};">Category Distribution</h2>
+                <select onchange="state.dashboardFilter=this.value;render()" class="px-3 py-1 rounded-lg border text-sm" style="border-color:rgba(0,0,0,0.1);color:${secondary};">
+                  <option value="all">All Time</option>
+                  <option value="month">This Month</option>
+                  <option value="week">This Week</option>
+                </select>
+              </div>
+              <div class="space-y-4">
+                ${Object.entries(categoryBreakdown).slice(0, 5).map(([cat, qty], idx) => {
+                  const maxQty = Math.max(...Object.values(categoryBreakdown));
+                  const percentage = (qty / maxQty) * 100;
+                  const colors = ['#6366f1', '#3b82f6', '#10b981', '#f59e0b', '#8b5cf6'];
+                  return `
+                    <div>
+                      <div class="flex items-center justify-between mb-2">
+                        <span style="font-size:${fontSize * 0.85}px;color:${textColor};font-weight:500;">${cat}</span>
+                        <span style="font-size:${fontSize * 0.8}px;color:${secondary};">${qty} units</span>
+                      </div>
+                      <div class="w-full bg-slate-100 rounded-full overflow-hidden" style="height:8px;">
+                        <div class="h-full rounded-full transition-all" style="background:${colors[idx % colors.length]};width:${percentage}%;"></div>
+                      </div>
+                    </div>
+                  `;
+                }).join('')}
+              </div>
+            </div>
+          </div>
+
+          <!-- Bottom Row: Top Products & Recent Activity -->
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <!-- Top Products by Quantity -->
+            <div class="card-base rounded-2xl p-6">
+              <div class="flex items-center justify-between mb-6">
+                <h2 class="font-bold" style="font-size:${fontSize * 1.15}px;color:${textColor};">Top Products</h2>
+                <button onclick="navigateDashboard('products')" class="text-sm font-medium" style="color:${primary};">View All →</button>
+              </div>
+              <div class="space-y-3 max-h-64 overflow-auto">
+                ${topProducts.length > 0
+                  ? topProducts.map((p, idx) => `
+                    <div class="flex items-center justify-between p-3 rounded-lg hover:bg-slate-50 transition-all group cursor-pointer" style="border:1px solid rgba(0,0,0,0.05);">
+                      <div class="flex items-center gap-3 flex-1">
+                        <div class="w-8 h-8 rounded-lg flex items-center justify-center font-bold text-white" style="background:${[primary, '#3b82f6', '#10b981', '#f59e0b', '#8b5cf6'][idx]};">
+                          ${idx + 1}
+                        </div>
+                        <div class="flex-1">
+                          <p class="font-semibold text-sm" style="color:${textColor};">${p.name}</p>
+                          <p style="font-size:${fontSize * 0.75}px;color:${secondary};">SKU: ${p.sku}</p>
+                        </div>
+                      </div>
+                      <div class="text-right">
+                        <p class="font-bold" style="color:${primary};font-size:${fontSize}px;">${p.quantity}</p>
+                        <p style="font-size:${fontSize * 0.75}px;color:${secondary};">${p.category}</p>
+                      </div>
+                    </div>
+                  `).join('')
+                  : `<p style="text-align:center;color:${secondary};padding:1rem;">No products yet</p>`
+                }
+              </div>
+            </div>
+
+            <!-- Recent Activity Feed -->
+            <div class="card-base rounded-2xl p-6">
+              <h2 class="font-bold mb-6" style="font-size:${fontSize * 1.15}px;color:${textColor};">Recent Activity</h2>
+              <div class="space-y-4">
+                ${activities.map((act, idx) => `
+                  <div class="flex gap-4 pb-4 ${idx < activities.length - 1 ? 'border-b' : ''}" style="border-color:rgba(0,0,0,0.05);">
+                    <div class="flex-shrink-0">
+                      <div class="w-10 h-10 rounded-lg flex items-center justify-center" style="background:${act.color}22;">
+                        <i data-lucide="${act.type === 'receipt' ? 'inbox' : act.type === 'delivery' ? 'truck' : 'edit'}" 
+                          style="width:20px;height:20px;color:${act.color};"></i>
+                      </div>
+                    </div>
+                    <div class="flex-1">
+                      <p class="font-medium text-sm" style="color:${textColor};">${act.msg}</p>
+                      <p style="font-size:${fontSize * 0.75}px;color:${secondary};margin-top:0.25rem;">${act.time}</p>
+                    </div>
+                  </div>
+                `).join('')}
+              </div>
+            </div>
+          </div>
+
+          <!-- Low Stock Items Alert Section -->
+          ${lowStock > 0 ? `
+            <div class="card-base rounded-2xl p-6 mt-8 border-l-4 animate-pulse" style="border-color:#f59e0b;background:linear-gradient(135deg, #fffbeb, #fef3c7);">
+              <div class="flex items-start justify-between gap-4">
+                <div class="flex items-start gap-4 flex-1">
+                  <div class="flex-shrink-0">
+                    <i data-lucide="alert-triangle" style="width:24px;height:24px;color:#f59e0b;margin-top:2px;"></i>
+                  </div>
+                  <div class="flex-1">
+                    <h3 class="font-bold mb-2" style="color:#92400e;font-size:${fontSize * 1.05}px;">⚠️ Low Stock Alert</h3>
+                    <p style="color:#b45309;font-size:${fontSize * 0.9}px;margin-bottom:1rem;">You have <strong>${lowStock}</strong> product${lowStock !== 1 ? 's' : ''} running low on stock. Consider creating receipts to reorder.</p>
+                    <div style="display:flex;gap:0.5rem;flex-wrap:wrap;">
+                      ${state.products.filter(p => p.quantity <= p.min_stock).slice(0, 3).map(p => `
+                        <span class="inline-block px-3 py-1 rounded-full text-xs font-semibold" style="background:#fed7aa;color:#92400e;">
+                          ${p.name} (${p.quantity} left)
+                        </span>
+                      `).join('')}
+                      ${lowStock > 3 ? `<span class="inline-block px-3 py-1 rounded-full text-xs font-semibold" style="background:#fed7aa;color:#92400e;">+${lowStock - 3} more</span>` : ''}
+                    </div>
+                  </div>
+                </div>
+                <button onclick="navigateDashboard('receipts')" class="btn-primary px-4 py-2 rounded-lg text-white font-semibold text-sm flex items-center gap-2 flex-shrink-0" style="background:linear-gradient(135deg,#f59e0b,#d97706);">
+                  <i data-lucide="inbox" style="width:16px;height:16px;"></i> Create Receipt
+                </button>
+              </div>
+            </div>
+          ` : ''}
+        </div>
+      `;
+    }
+
+    // ===== PRODUCTS PAGE =====
+    function renderProducts() {
+      const cfg = window.elementSdk ? window.elementSdk.config : defaultConfig;
+      const primary = cfg.primary_action || defaultConfig.primary_action;
+      const secondary = cfg.secondary_action || defaultConfig.secondary_action;
+      const textColor = cfg.text_color || defaultConfig.text_color;
+      const fontSize = cfg.font_size || defaultConfig.font_size;
+
+      const filteredProducts = state.products.filter(p => {
+        const matchSearch = p.name.toLowerCase().includes(state.productSearch.toLowerCase()) || 
+                           p.sku.toLowerCase().includes(state.productSearch.toLowerCase());
+        const matchCategory = state.productCategory === 'all' || p.category === state.productCategory;
+        return matchSearch && matchCategory;
+      });
+
+      return `
+        <div class="p-8">
+          <div class="flex items-center justify-between mb-8">
+            <div>
+              <h1 class="font-bold mb-2" style="font-size:${fontSize * 2}px;color:${textColor};">Products</h1>
+              <p style="color:${secondary};font-size:${fontSize * 0.93}px;">Manage your inventory items</p>
+            </div>
+            <button onclick="toggleProductForm()" class="btn-primary px-6 py-3 rounded-lg text-white font-semibold flex items-center gap-2" style="font-size:${fontSize}px;">
+              <i data-lucide="plus" style="width:18px;height:18px;"></i> Add Product
+            </button>
+          </div>
+
+          ${state.productShowForm ? renderProductForm() : ''}
+
+          <!-- Search & Filter -->
+          <div class="card-base rounded-2xl p-6 mb-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label class="block font-medium mb-2" style="font-size:${fontSize * 0.87}px;color:${textColor};">Search by Name or SKU</label>
+                <input type="text" placeholder="Search products..." value="${state.productSearch}"
+                  oninput="state.productSearch=this.value;render()"
+                  class="w-full px-4 py-2 rounded-lg border" style="border-color:rgba(0,0,0,0.1);font-size:${fontSize}px;">
+              </div>
+              <div>
+                <label class="block font-medium mb-2" style="font-size:${fontSize * 0.87}px;color:${textColor};">Category</label>
+                <select onchange="state.productCategory=this.value;render()"
+                  class="w-full px-4 py-2 rounded-lg border" style="border-color:rgba(0,0,0,0.1);font-size:${fontSize}px;">
+                  <option value="all">All Categories</option>
+                  ${state.categories.map(cat => `<option value="${cat}" ${state.productCategory === cat ? 'selected' : ''}>${cat}</option>`).join('')}
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <!-- Products Table -->
+          <div class="card-base rounded-2xl overflow-hidden">
+            <div class="overflow-x-auto">
+              <table class="w-full">
+                <thead style="background:rgba(99,102,241,0.05);border-bottom:1px solid rgba(0,0,0,0.1);">
+                  <tr>
+                    <th style="padding:1rem;text-align:left;font-weight:600;color:${textColor};">Name</th>
+                    <th style="padding:1rem;text-align:left;font-weight:600;color:${textColor};">SKU</th>
+                    <th style="padding:1rem;text-align:left;font-weight:600;color:${textColor};">Category</th>
+                    <th style="padding:1rem;text-align:right;font-weight:600;color:${textColor};">Qty</th>
+                    <th style="padding:1rem;text-align:right;font-weight:600;color:${textColor};">Min Stock</th>
+                    <th style="padding:1rem;text-align:center;font-weight:600;color:${textColor};">Status</th>
+                    <th style="padding:1rem;text-align:center;font-weight:600;color:${textColor};">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${filteredProducts.length > 0
+                    ? filteredProducts.map(p => `
+                      <tr style="border-bottom:1px solid rgba(0,0,0,0.05);">
+                        <td style="padding:1rem;color:${textColor};">${p.name}</td>
+                        <td style="padding:1rem;color:${secondary};">${p.sku}</td>
+                        <td style="padding:1rem;color:${secondary};">${p.category}</td>
+                        <td style="padding:1rem;text-align:right;color:${textColor};">${p.quantity}</td>
+                        <td style="padding:1rem;text-align:right;color:${secondary};">${p.min_stock}</td>
+                        <td style="padding:1rem;text-align:center;">
+                          <span class="inline-block px-3 py-1 rounded-full text-xs font-semibold" style="background:${p.quantity <= p.min_stock ? '#fee2e2' : '#d1fae5'};color:${p.quantity <= p.min_stock ? '#991b1b' : '#065f46'};">
+                            ${p.quantity <= p.min_stock ? '⚠️ Low' : '✓ OK'}
+                          </span>
+                        </td>
+                        <td style="padding:1rem;text-align:center;">
+                          <button onclick="editProduct('${p.id}')" class="text-sm px-3 py-1 rounded hover:bg-slate-100 transition-all" style="color:${primary};">Edit</button>
+                          <button onclick="deleteProduct('${p.id}')" class="text-sm px-3 py-1 rounded hover:bg-red-50 transition-all text-red-600">Delete</button>
+                        </td>
+                      </tr>
+                    `).join('')
+                    : `<tr><td colspan="7" style="padding:2rem;text-align:center;color:${secondary};">No products found</td></tr>`
+                  }
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderProductForm() {
+      const cfg = window.elementSdk ? window.elementSdk.config : defaultConfig;
+      const primary = cfg.primary_action || defaultConfig.primary_action;
+      const secondary = cfg.secondary_action || defaultConfig.secondary_action;
+      const textColor = cfg.text_color || defaultConfig.text_color;
+      const fontSize = cfg.font_size || defaultConfig.font_size;
+
+      return `
+        <div class="card-base rounded-2xl p-6 mb-6">
+          <h2 class="font-bold mb-4" style="font-size:${fontSize * 1.3}px;color:${textColor};">${state.productFormMode === 'add' ? 'Add New Product' : 'Edit Product'}</h2>
+          <form onsubmit="handleProductSubmit(event)" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label class="block font-medium mb-2" style="font-size:${fontSize * 0.87}px;color:${textColor};">Product Name *</label>
+              <input type="text" required placeholder="Product name" value="${state.productForm.name}"
+                oninput="state.productForm.name=this.value"
+                class="w-full px-4 py-2 rounded-lg border outline-none transition-all" style="border-color:rgba(0,0,0,0.1);font-size:${fontSize}px;">
+            </div>
+            <div>
+              <label class="block font-medium mb-2" style="font-size:${fontSize * 0.87}px;color:${textColor};">SKU *</label>
+              <input type="text" required placeholder="SKU" value="${state.productForm.sku}"
+                oninput="state.productForm.sku=this.value"
+                class="w-full px-4 py-2 rounded-lg border outline-none transition-all" style="border-color:rgba(0,0,0,0.1);font-size:${fontSize}px;">
+            </div>
+            <div>
+              <label class="block font-medium mb-2" style="font-size:${fontSize * 0.87}px;color:${textColor};">Category *</label>
+              <select required value="${state.productForm.category}" onchange="state.productForm.category=this.value"
+                class="w-full px-4 py-2 rounded-lg border outline-none transition-all" style="border-color:rgba(0,0,0,0.1);font-size:${fontSize}px;">
+                <option value="">Select category</option>
+                ${state.categories.map(cat => `<option value="${cat}" ${state.productForm.category === cat ? 'selected' : ''}>${cat}</option>`).join('')}
+              </select>
+            </div>
+            <div>
+              <label class="block font-medium mb-2" style="font-size:${fontSize * 0.87}px;color:${textColor};">Quantity *</label>
+              <input type="number" required placeholder="0" value="${state.productForm.quantity}"
+                oninput="state.productForm.quantity=this.value"
+                class="w-full px-4 py-2 rounded-lg border outline-none transition-all" style="border-color:rgba(0,0,0,0.1);font-size:${fontSize}px;">
+            </div>
+            <div>
+              <label class="block font-medium mb-2" style="font-size:${fontSize * 0.87}px;color:${textColor};">Min Stock *</label>
+              <input type="number" required placeholder="0" value="${state.productForm.min_stock}"
+                oninput="state.productForm.min_stock=this.value"
+                class="w-full px-4 py-2 rounded-lg border outline-none transition-all" style="border-color:rgba(0,0,0,0.1);font-size:${fontSize}px;">
+            </div>
+            <div>
+              <label class="block font-medium mb-2" style="font-size:${fontSize * 0.87}px;color:${textColor};">Location</label>
+              <input type="text" placeholder="Storage location" value="${state.productForm.location}"
+                oninput="state.productForm.location=this.value"
+                class="w-full px-4 py-2 rounded-lg border outline-none transition-all" style="border-color:rgba(0,0,0,0.1);font-size:${fontSize}px;">
+            </div>
+            <div class="md:col-span-2">
+              <label class="block font-medium mb-2" style="font-size:${fontSize * 0.87}px;color:${textColor};">Supplier</label>
+              <select value="${state.productForm.supplier}" onchange="state.productForm.supplier=this.value"
+                class="w-full px-4 py-2 rounded-lg border outline-none transition-all" style="border-color:rgba(0,0,0,0.1);font-size:${fontSize}px;">
+                <option value="">Select supplier</option>
+                ${state.suppliers.map(s => `<option value="${s}" ${state.productForm.supplier === s ? 'selected' : ''}>${s}</option>`).join('')}
+              </select>
+            </div>
+            <div class="md:col-span-2 flex gap-3">
+              <button type="submit" class="btn-primary px-6 py-2 rounded-lg text-white font-semibold" style="font-size:${fontSize}px;">
+                Save Product
+              </button>
+              <button type="button" onclick="toggleProductForm()" class="px-6 py-2 rounded-lg font-semibold" style="background:rgba(0,0,0,0.05);color:${secondary};">
+                Cancel
+              </button>
+            </div>
+          </form>
+        </div>
+      `;
+    }
+
+    // ===== RECEIPTS PAGE =====
+    function renderReceipts() {
+      const cfg = window.elementSdk ? window.elementSdk.config : defaultConfig;
+      const primary = cfg.primary_action || defaultConfig.primary_action;
+      const secondary = cfg.secondary_action || defaultConfig.secondary_action;
+      const textColor = cfg.text_color || defaultConfig.text_color;
+      const fontSize = cfg.font_size || defaultConfig.font_size;
+
+      return `
+        <div class="p-8">
+          <div class="flex items-center justify-between mb-8">
+            <div>
+              <h1 class="font-bold mb-2" style="font-size:${fontSize * 2}px;color:${textColor};">Receipts</h1>
+              <p style="color:${secondary};font-size:${fontSize * 0.93}px;">Manage incoming inventory</p>
+            </div>
+            <button onclick="toggleReceiptForm()" class="btn-primary px-6 py-3 rounded-lg text-white font-semibold flex items-center gap-2" style="font-size:${fontSize}px;">
+              <i data-lucide="plus" style="width:18px;height:18px;"></i> New Receipt
+            </button>
+          </div>
+
+          ${state.receiptShowForm ? renderReceiptForm() : ''}
+
+          <!-- Pending Receipts -->
+          <div class="card-base rounded-2xl overflow-hidden">
+            <div class="p-6 border-b" style="border-color:rgba(0,0,0,0.1);">
+              <h2 class="font-bold" style="font-size:${fontSize * 1.15}px;color:${textColor};">Pending Receipts</h2>
+            </div>
+            <div class="overflow-x-auto">
+              ${state.receipts.length > 0 ? `
+                <table class="w-full">
+                  <thead style="background:rgba(99,102,241,0.05);border-bottom:1px solid rgba(0,0,0,0.1);">
+                    <tr>
+                      <th style="padding:1rem;text-align:left;font-weight:600;color:${textColor};">Product</th>
+                      <th style="padding:1rem;text-align:left;font-weight:600;color:${textColor};">Supplier</th>
+                      <th style="padding:1rem;text-align:right;font-weight:600;color:${textColor};">Quantity</th>
+                      <th style="padding:1rem;text-align:center;font-weight:600;color:${textColor};">Status</th>
+                      <th style="padding:1rem;text-align:center;font-weight:600;color:${textColor};">Date</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    ${state.receipts.map(r => `
+                      <tr style="border-bottom:1px solid rgba(0,0,0,0.05);">
+                        <td style="padding:1rem;color:${textColor};">${r.product_name}</td>
+                        <td style="padding:1rem;color:${secondary};">${r.supplier}</td>
+                        <td style="padding:1rem;text-align:right;color:${primary};font-weight:600;">+${r.quantity}</td>
+                        <td style="padding:1rem;text-align:center;">
+                          <span class="inline-block px-3 py-1 rounded-full text-xs font-semibold" style="background:#fbbf24;color:#92400e;">
+                            ⏳ ${r.status.charAt(0).toUpperCase() + r.status.slice(1)}
+                          </span>
+                        </td>
+                        <td style="padding:1rem;text-align:center;color:${secondary};font-size:${fontSize * 0.87}px;">
+                          ${new Date(r.created_at).toLocaleDateString()}
+                        </td>
+                      </tr>
+                    `).join('')}
+                  </tbody>
+                </table>
+              ` : `
+                <div style="padding:2rem;text-align:center;color:${secondary};">
+                  <i data-lucide="inbox" style="width:40px;height:40px;opacity:0.3;margin:0 auto 1rem;display:block;"></i>
+                  <p>No pending receipts</p>
+                </div>
+              `}
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderReceiptForm() {
+      const cfg = window.elementSdk ? window.elementSdk.config : defaultConfig;
+      const primary = cfg.primary_action || defaultConfig.primary_action;
+      const secondary = cfg.secondary_action || defaultConfig.secondary_action;
+      const textColor = cfg.text_color || defaultConfig.text_color;
+      const fontSize = cfg.font_size || defaultConfig.font_size;
+
+      return `
+        <div class="card-base rounded-2xl p-6 mb-6">
+          <h2 class="font-bold mb-4" style="font-size:${fontSize * 1.3}px;color:${textColor};">Create New Receipt</h2>
+          <form onsubmit="handleReceiptSubmit(event)" class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+              <label class="block font-medium mb-2" style="font-size:${fontSize * 0.87}px;color:${textColor};">Supplier *</label>
+              <select required value="${state.receiptForm.supplier}" onchange="state.receiptForm.supplier=this.value"
+                class="w-full px-4 py-2 rounded-lg border outline-none" style="border-color:rgba(0,0,0,0.1);font-size:${fontSize}px;">
+                <option value="">Select supplier</option>
+                ${state.suppliers.map(s => `<option value="${s}" ${state.receiptForm.supplier === s ? 'selected' : ''}>${s}</option>`).join('')}
+              </select>
+            </div>
+            <div>
+              <label class="block font-medium mb-2" style="font-size:${fontSize * 0.87}px;color:${textColor};">Product *</label>
+              <select required value="${state.receiptForm.product_id}" onchange="state.receiptForm.product_id=this.value"
+                class="w-full px-4 py-2 rounded-lg border outline-none" style="border-color:rgba(0,0,0,0.1);font-size:${fontSize}px;">
+                <option value="">Select product</option>
+                ${state.products.map(p => `<option value="${p.id}" ${state.receiptForm.product_id === p.id ? 'selected' : ''}>${p.name}</option>`).join('')}
+              </select>
+            </div>
+            <div>
+              <label class="block font-medium mb-2" style="font-size:${fontSize * 0.87}px;color:${textColor};">Quantity *</label>
+              <input type="number" required placeholder="0" value="${state.receiptForm.quantity}"
+                oninput="state.receiptForm.quantity=this.value"
+                class="w-full px-4 py-2 rounded-lg border outline-none" style="border-color:rgba(0,0,0,0.1);font-size:${fontSize}px;">
+            </div>
+            <div class="md:col-span-3 flex gap-3">
+              <button type="submit" class="btn-primary px-6 py-2 rounded-lg text-white font-semibold" style="font-size:${fontSize}px;">
+                Create Receipt
+              </button>
+              <button type="button" onclick="toggleReceiptForm()" class="px-6 py-2 rounded-lg font-semibold" style="background:rgba(0,0,0,0.05);color:${secondary};">
+                Cancel
+              </button>
+            </div>
+          </form>
+        </div>
+      `;
+    }
+
+    // ===== DELIVERIES PAGE =====
+    function renderDeliveries() {
+      const cfg = window.elementSdk ? window.elementSdk.config : defaultConfig;
+      const primary = cfg.primary_action || defaultConfig.primary_action;
+      const secondary = cfg.secondary_action || defaultConfig.secondary_action;
+      const textColor = cfg.text_color || defaultConfig.text_color;
+      const fontSize = cfg.font_size || defaultConfig.font_size;
+
+      return `
+        <div class="p-8">
+          <div class="flex items-center justify-between mb-8">
+            <div>
+              <h1 class="font-bold mb-2" style="font-size:${fontSize * 2}px;color:${textColor};">Deliveries</h1>
+              <p style="color:${secondary};font-size:${fontSize * 0.93}px;">Manage outgoing shipments</p>
+            </div>
+            <button onclick="toggleDeliveryForm()" class="btn-primary px-6 py-3 rounded-lg text-white font-semibold flex items-center gap-2" style="font-size:${fontSize}px;">
+              <i data-lucide="plus" style="width:18px;height:18px;"></i> New Delivery
+            </button>
+          </div>
+
+          ${state.deliveryShowForm ? renderDeliveryForm() : ''}
+
+          <!-- Pending Deliveries -->
+          <div class="card-base rounded-2xl overflow-hidden">
+            <div class="p-6 border-b" style="border-color:rgba(0,0,0,0.1);">
+              <h2 class="font-bold" style="font-size:${fontSize * 1.15}px;color:${textColor};">Pending Deliveries</h2>
+            </div>
+            <div class="overflow-x-auto">
+              ${state.deliveries.length > 0 ? `
+                <table class="w-full">
+                  <thead style="background:rgba(99,102,241,0.05);border-bottom:1px solid rgba(0,0,0,0.1);">
+                    <tr>
+                      <th style="padding:1rem;text-align:left;font-weight:600;color:${textColor};">Product</th>
+                      <th style="padding:1rem;text-align:right;font-weight:600;color:${textColor};">Quantity</th>
+                      <th style="padding:1rem;text-align:center;font-weight:600;color:${textColor};">Status</th>
+                      <th style="padding:1rem;text-align:center;font-weight:600;color:${textColor};">Date</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    ${state.deliveries.map(d => `
+                      <tr style="border-bottom:1px solid rgba(0,0,0,0.05);">
+                        <td style="padding:1rem;color:${textColor};">${d.product_name}</td>
+                        <td style="padding:1rem;text-align:right;color:#ef4444;font-weight:600;">-${d.quantity}</td>
+                        <td style="padding:1rem;text-align:center;">
+                          <span class="inline-block px-3 py-1 rounded-full text-xs font-semibold" style="background:#bfdbfe;color:#1e40af;">
+                            ⏳ ${d.status.charAt(0).toUpperCase() + d.status.slice(1)}
+                          </span>
+                        </td>
+                        <td style="padding:1rem;text-align:center;color:${secondary};font-size:${fontSize * 0.87}px;">
+                          ${new Date(d.created_at).toLocaleDateString()}
+                        </td>
+                      </tr>
+                    `).join('')}
+                  </tbody>
+                </table>
+              ` : `
+                <div style="padding:2rem;text-align:center;color:${secondary};">
+                  <i data-lucide="truck" style="width:40px;height:40px;opacity:0.3;margin:0 auto 1rem;display:block;"></i>
+                  <p>No pending deliveries</p>
+                </div>
+              `}
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderDeliveryForm() {
+      const cfg = window.elementSdk ? window.elementSdk.config : defaultConfig;
+      const primary = cfg.primary_action || defaultConfig.primary_action;
+      const secondary = cfg.secondary_action || defaultConfig.secondary_action;
+      const textColor = cfg.text_color || defaultConfig.text_color;
+      const fontSize = cfg.font_size || defaultConfig.font_size;
+
+      return `
+        <div class="card-base rounded-2xl p-6 mb-6">
+          <h2 class="font-bold mb-4" style="font-size:${fontSize * 1.3}px;color:${textColor};">Create New Delivery</h2>
+          <form onsubmit="handleDeliverySubmit(event)" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label class="block font-medium mb-2" style="font-size:${fontSize * 0.87}px;color:${textColor};">Product *</label>
+              <select required value="${state.deliveryForm.product_id}" onchange="state.deliveryForm.product_id=this.value"
+                class="w-full px-4 py-2 rounded-lg border outline-none" style="border-color:rgba(0,0,0,0.1);font-size:${fontSize}px;">
+                <option value="">Select product</option>
+                ${state.products.map(p => `<option value="${p.id}" ${state.deliveryForm.product_id === p.id ? 'selected' : ''}>${p.name} (${p.quantity} available)</option>`).join('')}
+              </select>
+            </div>
+            <div>
+              <label class="block font-medium mb-2" style="font-size:${fontSize * 0.87}px;color:${textColor};">Quantity *</label>
+              <input type="number" required placeholder="0" value="${state.deliveryForm.quantity}"
+                oninput="state.deliveryForm.quantity=this.value"
+                class="w-full px-4 py-2 rounded-lg border outline-none" style="border-color:rgba(0,0,0,0.1);font-size:${fontSize}px;">
+            </div>
+            <div class="md:col-span-2 flex gap-3">
+              <button type="submit" class="btn-primary px-6 py-2 rounded-lg text-white font-semibold" style="font-size:${fontSize}px;">
+                Create Delivery
+              </button>
+              <button type="button" onclick="toggleDeliveryForm()" class="px-6 py-2 rounded-lg font-semibold" style="background:rgba(0,0,0,0.05);color:${secondary};">
+                Cancel
+              </button>
+            </div>
+          </form>
+        </div>
+      `;
+    }
+
+    // ===== TRANSFERS PAGE =====
+    function renderTransfers() {
+      const cfg = window.elementSdk ? window.elementSdk.config : defaultConfig;
+      const primary = cfg.primary_action || defaultConfig.primary_action;
+      const secondary = cfg.secondary_action || defaultConfig.secondary_action;
+      const textColor = cfg.text_color || defaultConfig.text_color;
+      const fontSize = cfg.font_size || defaultConfig.font_size;
+
+      return `
+        <div class="p-8">
+          <div class="flex items-center justify-between mb-8">
+            <div>
+              <h1 class="font-bold mb-2" style="font-size:${fontSize * 2}px;color:${textColor};">Transfers</h1>
+              <p style="color:${secondary};font-size:${fontSize * 0.93}px;">Move inventory between warehouses</p>
+            </div>
+            <button onclick="toggleTransferForm()" class="btn-primary px-6 py-3 rounded-lg text-white font-semibold flex items-center gap-2" style="font-size:${fontSize}px;">
+              <i data-lucide="plus" style="width:18px;height:18px;"></i> New Transfer
+            </button>
+          </div>
+
+          ${state.transferShowForm ? renderTransferForm() : ''}
+
+          <!-- Pending Transfers -->
+          <div class="card-base rounded-2xl overflow-hidden">
+            <div class="p-6 border-b" style="border-color:rgba(0,0,0,0.1);">
+              <h2 class="font-bold" style="font-size:${fontSize * 1.15}px;color:${textColor};">Pending Transfers</h2>
+            </div>
+            <div class="overflow-x-auto">
+              ${state.transfers.length > 0 ? `
+                <table class="w-full">
+                  <thead style="background:rgba(99,102,241,0.05);border-bottom:1px solid rgba(0,0,0,0.1);">
+                    <tr>
+                      <th style="padding:1rem;text-align:left;font-weight:600;color:${textColor};">Product</th>
+                      <th style="padding:1rem;text-align:left;font-weight:600;color:${textColor};">From Warehouse</th>
+                      <th style="padding:1rem;text-align:left;font-weight:600;color:${textColor};">To Warehouse</th>
+                      <th style="padding:1rem;text-align:right;font-weight:600;color:${textColor};">Quantity</th>
+                      <th style="padding:1rem;text-align:center;font-weight:600;color:${textColor};">Status</th>
+                      <th style="padding:1rem;text-align:center;font-weight:600;color:${textColor};">Date</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    ${state.transfers.map(t => `
+                      <tr style="border-bottom:1px solid rgba(0,0,0,0.05);">
+                        <td style="padding:1rem;color:${textColor};">${t.product_name}</td>
+                        <td style="padding:1rem;color:${secondary};">${t.from_warehouse}</td>
+                        <td style="padding:1rem;color:${secondary};">${t.to_warehouse}</td>
+                        <td style="padding:1rem;text-align:right;color:${primary};font-weight:600;">↔ ${t.quantity}</td>
+                        <td style="padding:1rem;text-align:center;">
+                          <span class="inline-block px-3 py-1 rounded-full text-xs font-semibold" style="background:#e0e7ff;color:#3730a3;">
+                            ⏳ ${t.status.charAt(0).toUpperCase() + t.status.slice(1)}
+                          </span>
+                        </td>
+                        <td style="padding:1rem;text-align:center;color:${secondary};font-size:${fontSize * 0.87}px;">
+                          ${new Date(t.created_at).toLocaleDateString()}
+                        </td>
+                      </tr>
+                    `).join('')}
+                  </tbody>
+                </table>
+              ` : `
+                <div style="padding:2rem;text-align:center;color:${secondary};">
+                  <i data-lucide="arrow-right-left" style="width:40px;height:40px;opacity:0.3;margin:0 auto 1rem;display:block;"></i>
+                  <p>No pending transfers</p>
+                </div>
+              `}
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderTransferForm() {
+      const cfg = window.elementSdk ? window.elementSdk.config : defaultConfig;
+      const primary = cfg.primary_action || defaultConfig.primary_action;
+      const secondary = cfg.secondary_action || defaultConfig.secondary_action;
+      const textColor = cfg.text_color || defaultConfig.text_color;
+      const fontSize = cfg.font_size || defaultConfig.font_size;
+
+      return `
+        <div class="card-base rounded-2xl p-6 mb-6">
+          <h2 class="font-bold mb-4" style="font-size:${fontSize * 1.3}px;color:${textColor};">Create New Transfer</h2>
+          <form onsubmit="handleTransferSubmit(event)" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label class="block font-medium mb-2" style="font-size:${fontSize * 0.87}px;color:${textColor};">From Warehouse *</label>
+              <select required value="${state.transferForm.from_warehouse}" onchange="state.transferForm.from_warehouse=this.value"
+                class="w-full px-4 py-2 rounded-lg border outline-none" style="border-color:rgba(0,0,0,0.1);font-size:${fontSize}px;">
+                <option value="">Select warehouse</option>
+                ${state.warehouses.map(w => `<option value="${w}" ${state.transferForm.from_warehouse === w ? 'selected' : ''}>${w}</option>`).join('')}
+              </select>
+            </div>
+            <div>
+              <label class="block font-medium mb-2" style="font-size:${fontSize * 0.87}px;color:${textColor};">To Warehouse *</label>
+              <select required value="${state.transferForm.to_warehouse}" onchange="state.transferForm.to_warehouse=this.value"
+                class="w-full px-4 py-2 rounded-lg border outline-none" style="border-color:rgba(0,0,0,0.1);font-size:${fontSize}px;">
+                <option value="">Select warehouse</option>
+                ${state.warehouses.map(w => `<option value="${w}" ${state.transferForm.to_warehouse === w ? 'selected' : ''}>${w}</option>`).join('')}
+              </select>
+            </div>
+            <div>
+              <label class="block font-medium mb-2" style="font-size:${fontSize * 0.87}px;color:${textColor};">Product *</label>
+              <select required value="${state.transferForm.product_id}" onchange="state.transferForm.product_id=this.value"
+                class="w-full px-4 py-2 rounded-lg border outline-none" style="border-color:rgba(0,0,0,0.1);font-size:${fontSize}px;">
+                <option value="">Select product</option>
+                ${state.products.map(p => `<option value="${p.id}" ${state.transferForm.product_id === p.id ? 'selected' : ''}>${p.name}</option>`).join('')}
+              </select>
+            </div>
+            <div>
+              <label class="block font-medium mb-2" style="font-size:${fontSize * 0.87}px;color:${textColor};">Quantity *</label>
+              <input type="number" required placeholder="0" value="${state.transferForm.quantity}"
+                oninput="state.transferForm.quantity=this.value"
+                class="w-full px-4 py-2 rounded-lg border outline-none" style="border-color:rgba(0,0,0,0.1);font-size:${fontSize}px;">
+            </div>
+            <div class="md:col-span-2 flex gap-3">
+              <button type="submit" class="btn-primary px-6 py-2 rounded-lg text-white font-semibold" style="font-size:${fontSize}px;">
+                Create Transfer
+              </button>
+              <button type="button" onclick="toggleTransferForm()" class="px-6 py-2 rounded-lg font-semibold" style="background:rgba(0,0,0,0.05);color:${secondary};">
+                Cancel
+              </button>
+            </div>
+          </form>
+        </div>
+      `;
+    }
+
+    // ===== ADJUSTMENTS PAGE =====
+    function renderAdjustments() {
+      const cfg = window.elementSdk ? window.elementSdk.config : defaultConfig;
+      const primary = cfg.primary_action || defaultConfig.primary_action;
+      const secondary = cfg.secondary_action || defaultConfig.secondary_action;
+      const textColor = cfg.text_color || defaultConfig.text_color;
+      const fontSize = cfg.font_size || defaultConfig.font_size;
+
+      return `
+        <div class="p-8">
+          <div class="flex items-center justify-between mb-8">
+            <div>
+              <h1 class="font-bold mb-2" style="font-size:${fontSize * 2}px;color:${textColor};">Stock Adjustments</h1>
+              <p style="color:${secondary};font-size:${fontSize * 0.93}px;">Correct inventory discrepancies</p>
+            </div>
+            <button onclick="toggleAdjustmentForm()" class="btn-primary px-6 py-3 rounded-lg text-white font-semibold flex items-center gap-2" style="font-size:${fontSize}px;">
+              <i data-lucide="plus" style="width:18px;height:18px;"></i> New Adjustment
+            </button>
+          </div>
+
+          ${state.adjustmentShowForm ? renderAdjustmentForm() : ''}
+
+          <!-- Adjustment History -->
+          <div class="card-base rounded-2xl overflow-hidden">
+            <div class="p-6 border-b" style="border-color:rgba(0,0,0,0.1);">
+              <h2 class="font-bold" style="font-size:${fontSize * 1.15}px;color:${textColor};">Adjustment History</h2>
+            </div>
+            <div class="overflow-x-auto">
+              ${state.adjustments.length > 0 ? `
+                <table class="w-full">
+                  <thead style="background:rgba(0, 217, 255, 0.05);border-bottom:1px solid rgba(0, 217, 255, 0.15);">
+                    <tr>
+                      <th style="padding:1rem;text-align:left;font-weight:600;color:${textColor};">Product</th>
+                      <th style="padding:1rem;text-align:left;font-weight:600;color:${textColor};">Location</th>
+                      <th style="padding:1rem;text-align:right;font-weight:600;color:${textColor};">Previous Qty</th>
+                      <th style="padding:1rem;text-align:right;font-weight:600;color:${textColor};">New Qty</th>
+                      <th style="padding:1rem;text-align:right;font-weight:600;color:${textColor};">Difference</th>
+                      <th style="padding:1rem;text-align:center;font-weight:600;color:${textColor};">Date</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    ${state.adjustments.map(adj => {
+                      const isPositive = adj.difference >= 0;
+                      const diffColor = isPositive ? '#22c55e' : '#ef4444';
+                      return `
+                        <tr style="border-bottom:1px solid rgba(0, 217, 255, 0.1);">
+                          <td style="padding:1rem;color:${textColor};">${adj.product_name}</td>
+                          <td style="padding:1rem;color:${secondary};">${adj.location || 'N/A'}</td>
+                          <td style="padding:1rem;text-align:right;color:${secondary};">${adj.old_quantity}</td>
+                          <td style="padding:1rem;text-align:right;color:${primary};">${adj.new_quantity}</td>
+                          <td style="padding:1rem;text-align:right;font-weight:600;color:${diffColor};">${isPositive ? '+' : ''}${adj.difference}</td>
+                          <td style="padding:1rem;text-align:center;color:${secondary};font-size:${fontSize * 0.87}px;">
+                            ${new Date(adj.created_at).toLocaleDateString()}
+                          </td>
+                        </tr>
+                      `;
+                    }).join('')}
+                  </tbody>
+                </table>
+              ` : `
+                <div style="padding:2rem;text-align:center;color:${secondary};">
+                  <i data-lucide="check-circle-2" style="width:40px;height:40px;opacity:0.3;margin:0 auto 1rem;display:block;"></i>
+                  <p>No adjustments yet</p>
+                </div>
+              `}
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderAdjustmentForm() {
+      const cfg = window.elementSdk ? window.elementSdk.config : defaultConfig;
+      const primary = cfg.primary_action || defaultConfig.primary_action;
+      const secondary = cfg.secondary_action || defaultConfig.secondary_action;
+      const textColor = cfg.text_color || defaultConfig.text_color;
+      const fontSize = cfg.font_size || defaultConfig.font_size;
+
+      return `
+        <div class="card-base rounded-2xl p-6 mb-6">
+          <h2 class="font-bold mb-4" style="font-size:${fontSize * 1.3}px;color:${textColor};">Create New Adjustment</h2>
+          <form onsubmit="handleAdjustmentSubmit(event)" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label class="block font-medium mb-2" style="font-size:${fontSize * 0.87}px;color:${textColor};">Product *</label>
+              <select required value="${state.adjustmentForm.product_id}" onchange="state.adjustmentForm.product_id=this.value"
+                class="w-full px-4 py-2 rounded-lg border outline-none" style="border-color:rgba(0,0,0,0.1);font-size:${fontSize}px;">
+                <option value="">Select product</option>
+                ${state.products.map(p => `<option value="${p.id}" ${state.adjustmentForm.product_id === p.id ? 'selected' : ''}>${p.name}</option>`).join('')}
+              </select>
+            </div>
+            <div>
+              <label class="block font-medium mb-2" style="font-size:${fontSize * 0.87}px;color:${textColor};">Location</label>
+              <input type="text" placeholder="Storage location" value="${state.adjustmentForm.location}"
+                oninput="state.adjustmentForm.location=this.value"
+                class="w-full px-4 py-2 rounded-lg border outline-none" style="border-color:rgba(0,0,0,0.1);font-size:${fontSize}px;">
+            </div>
+            <div>
+              <label class="block font-medium mb-2" style="font-size:${fontSize * 0.87}px;color:${textColor};">Actual Count *</label>
+              <input type="number" required placeholder="0" value="${state.adjustmentForm.actual_count}"
+                oninput="state.adjustmentForm.actual_count=this.value"
+                class="w-full px-4 py-2 rounded-lg border outline-none" style="border-color:rgba(0,0,0,0.1);font-size:${fontSize}px;">
+            </div>
+            <div class="md:col-span-2 flex gap-3">
+              <button type="submit" class="btn-primary px-6 py-2 rounded-lg text-white font-semibold" style="font-size:${fontSize}px;">
+                Apply Adjustment
+              </button>
+              <button type="button" onclick="toggleAdjustmentForm()" class="px-6 py-2 rounded-lg font-semibold" style="background:rgba(0,0,0,0.05);color:${secondary};">
+                Cancel
+              </button>
+            </div>
+          </form>
+        </div>
+      `;
+    }
+
+    // ===== STAFF DASHBOARD PAGES =====
+    function renderStaffDashboard() {
+      const cfg = window.elementSdk ? window.elementSdk.config : defaultConfig;
+      const primary = cfg.primary_action || defaultConfig.primary_action;
+      const secondary = cfg.secondary_action || defaultConfig.secondary_action;
+      const textColor = cfg.text_color || defaultConfig.text_color;
+      const fontSize = cfg.font_size || defaultConfig.font_size;
+
+      const assignedTasks = state.staffTasks.filter(t => !t.completed);
+      const completedTasks = state.staffTasks.filter(t => t.completed);
+
+      const getTaskIcon = (type) => {
+        const icons = { transfer: 'arrow-right-left', picking: 'box', shelving: 'layers', counting: 'calculator' };
+        return icons[type] || 'list-check';
+      };
+
+      const getTaskColor = (type) => {
+        const colors = { transfer: '#0ea5e9', picking: '#3b82f6', shelving: '#10b981', counting: '#f59e0b' };
+        return colors[type] || primary;
+      };
+
+      return `
+        <div class="p-8">
+          <div class="flex items-center justify-between mb-8">
+            <div>
+              <h1 class="font-bold mb-2" style="font-size:${fontSize * 2}px;color:${textColor};">My Tasks</h1>
+              <p style="color:${secondary};font-size:${fontSize * 0.93}px;">Your assigned warehouse tasks</p>
+            </div>
+          </div>
+
+          <!-- Tasks Overview Cards -->
+          <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+            <div class="card-base rounded-2xl p-6" style="border-left:4px solid ${primary};">
+              <div class="flex items-center justify-between">
+                <div>
+                  <p style="color:${secondary};font-size:${fontSize * 0.85}px;font-weight:500;margin-bottom:0.5rem;">Assigned</p>
+                  <h3 class="font-bold" style="font-size:${fontSize * 2}px;color:${primary};">${assignedTasks.length}</h3>
+                </div>
+                <div class="w-12 h-12 rounded-xl flex items-center justify-center" style="background:${primary}22;">
+                  <i data-lucide="list-check" style="width:24px;height:24px;color:${primary};"></i>
+                </div>
+              </div>
+            </div>
+            <div class="card-base rounded-2xl p-6" style="border-left:4px solid #10b981;">
+              <div class="flex items-center justify-between">
+                <div>
+                  <p style="color:${secondary};font-size:${fontSize * 0.85}px;font-weight:500;margin-bottom:0.5rem;">Completed</p>
+                  <h3 class="font-bold" style="font-size:${fontSize * 2}px;color:#10b981;">${completedTasks.length}</h3>
+                </div>
+                <div class="w-12 h-12 rounded-xl flex items-center justify-center" style="background:#10b98122;">
+                  <i data-lucide="check-circle-2" style="width:24px;height:24px;color:#10b981;"></i>
+                </div>
+              </div>
+            </div>
+            <div class="card-base rounded-2xl p-6" style="border-left:4px solid #3b82f6;">
+              <div class="flex items-center justify-between">
+                <div>
+                  <p style="color:${secondary};font-size:${fontSize * 0.85}px;font-weight:500;margin-bottom:0.5rem;">Picking</p>
+                  <h3 class="font-bold" style="font-size:${fontSize * 2}px;color:#3b82f6;">${assignedTasks.filter(t => t.task_type === 'picking').length}</h3>
+                </div>
+                <div class="w-12 h-12 rounded-xl flex items-center justify-center" style="background:#3b82f622;">
+                  <i data-lucide="box" style="width:24px;height:24px;color:#3b82f6;"></i>
+                </div>
+              </div>
+            </div>
+            <div class="card-base rounded-2xl p-6" style="border-left:4px solid #f59e0b;">
+              <div class="flex items-center justify-between">
+                <div>
+                  <p style="color:${secondary};font-size:${fontSize * 0.85}px;font-weight:500;margin-bottom:0.5rem;">Counting</p>
+                  <h3 class="font-bold" style="font-size:${fontSize * 2}px;color:#f59e0b;">${assignedTasks.filter(t => t.task_type === 'counting').length}</h3>
+                </div>
+                <div class="w-12 h-12 rounded-xl flex items-center justify-center" style="background:#f59e0b22;">
+                  <i data-lucide="calculator" style="width:24px;height:24px;color:#f59e0b;"></i>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Assigned Tasks -->
+          <div class="card-base rounded-2xl p-6 mb-6">
+            <h2 class="font-bold mb-6" style="font-size:${fontSize * 1.3}px;color:${textColor};">Active Tasks</h2>
+            <div class="space-y-3">
+              ${assignedTasks.length > 0
+                ? assignedTasks.map(task => {
+                    const product = state.products.find(p => p.id === task.product_id);
+                    return `
+                      <div class="flex items-center justify-between p-4 rounded-lg border" style="border-color:rgba(0,0,0,0.1);">
+                        <div class="flex items-center gap-4 flex-1">
+                          <div class="w-12 h-12 rounded-xl flex items-center justify-center" style="background:${getTaskColor(task.task_type)}22;">
+                            <i data-lucide="${getTaskIcon(task.task_type)}" style="width:24px;height:24px;color:${getTaskColor(task.task_type)};"></i>
+                          </div>
+                          <div class="flex-1">
+                            <p class="font-semibold" style="color:${textColor};">${task.task_type.charAt(0).toUpperCase() + task.task_type.slice(1)}: ${product?.name || 'Unknown'}</p>
+                            <p style="font-size:${fontSize * 0.8}px;color:${secondary};">Qty: ${task.quantity} | ${task.from_location ? 'From: ' + task.from_location : ''} ${task.to_location ? 'To: ' + task.to_location : ''}</p>
+                          </div>
+                        </div>
+                        <button onclick="completeStaffTask('${task.task_id}')" class="btn-primary px-4 py-2 rounded-lg text-white font-semibold text-sm flex items-center gap-2">
+                          <i data-lucide="check" style="width:16px;height:16px;"></i> Mark Done
+                        </button>
+                      </div>
+                    `;
+                  }).join('')
+                : `<p style="text-align:center;color:${secondary};padding:1rem;">No assigned tasks</p>`
+              }
+            </div>
+          </div>
+
+          <!-- Completed Tasks -->
+          ${completedTasks.length > 0 ? `
+            <div class="card-base rounded-2xl p-6">
+              <h2 class="font-bold mb-6" style="font-size:${fontSize * 1.3}px;color:${textColor};">Completed Today</h2>
+              <div class="space-y-3">
+                ${completedTasks.map(task => {
+                  const product = state.products.find(p => p.id === task.product_id);
+                  return `
+                    <div class="flex items-center gap-4 p-4 rounded-lg" style="background:#d1fae5;">
+                      <i data-lucide="check-circle-2" style="width:24px;height:24px;color:#065f46;"></i>
+                      <div class="flex-1">
+                        <p class="font-semibold text-green-800">${task.task_type.charAt(0).toUpperCase() + task.task_type.slice(1)}: ${product?.name || 'Unknown'}</p>
+                        <p style="font-size:${fontSize * 0.8}px;color:#047857;">Completed</p>
+                      </div>
+                    </div>
+                  `;
+                }).join('')}
+              </div>
+            </div>
+          ` : ''}
+        </div>
+      `;
+    }
+
+    function renderStaffPicking() {
+      const cfg = window.elementSdk ? window.elementSdk.config : defaultConfig;
+      const primary = cfg.primary_action || defaultConfig.primary_action;
+      const secondary = cfg.secondary_action || defaultConfig.secondary_action;
+      const textColor = cfg.text_color || defaultConfig.text_color;
+      const fontSize = cfg.font_size || defaultConfig.font_size;
+
+      const pickingTasks = state.staffTasks.filter(t => t.task_type === 'picking' && !t.completed);
+
+      return `
+        <div class="p-8">
+          <div class="flex items-center justify-between mb-8">
+            <div>
+              <h1 class="font-bold mb-2" style="font-size:${fontSize * 2}px;color:${textColor};">Picking</h1>
+              <p style="color:${secondary};font-size:${fontSize * 0.93}px;">Pick items from locations for shipment</p>
+            </div>
+          </div>
+
+          <div class="card-base rounded-2xl p-6">
+            <h2 class="font-bold mb-6" style="font-size:${fontSize * 1.3}px;color:${textColor};">Picking Tasks</h2>
+            <div class="space-y-3">
+              ${pickingTasks.length > 0
+                ? pickingTasks.map(task => {
+                    const product = state.products.find(p => p.id === task.product_id);
+                    return `
+                      <div class="p-4 rounded-lg border-2" style="border-color:#bfdbfe;">
+                        <div class="flex items-start justify-between mb-3">
+                          <div>
+                            <p class="font-semibold text-lg" style="color:${textColor};">${product?.name || 'Unknown'}</p>
+                            <p style="font-size:${fontSize * 0.8}px;color:${secondary};">SKU: ${product?.sku || 'N/A'}</p>
+                          </div>
+                          <span class="text-2xl font-bold" style="color:#0ea5e9;">${task.quantity}</span>
+                        </div>
+                        <div class="bg-blue-50 p-3 rounded-lg mb-3">
+                          <p style="font-size:${fontSize * 0.85}px;color:#1e40af;font-weight:500;">📍 Pick from: ${task.from_location || 'Location TBD'}</p>
+                        </div>
+                        <button onclick="completeStaffTask('${task.task_id}')" class="btn-primary w-full py-2 rounded-lg text-white font-semibold">
+                          ✓ Picked & Ready
+                        </button>
+                      </div>
+                    `;
+                  }).join('')
+                : `<p style="text-align:center;color:${secondary};padding:2rem;">No picking tasks assigned</p>`
+              }
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderStaffShelving() {
+      const cfg = window.elementSdk ? window.elementSdk.config : defaultConfig;
+      const primary = cfg.primary_action || defaultConfig.primary_action;
+      const secondary = cfg.secondary_action || defaultConfig.secondary_action;
+      const textColor = cfg.text_color || defaultConfig.text_color;
+      const fontSize = cfg.font_size || defaultConfig.font_size;
+
+      const shelvingTasks = state.staffTasks.filter(t => t.task_type === 'shelving' && !t.completed);
+
+      return `
+        <div class="p-8">
+          <div class="flex items-center justify-between mb-8">
+            <div>
+              <h1 class="font-bold mb-2" style="font-size:${fontSize * 2}px;color:${textColor};">Shelving</h1>
+              <p style="color:${secondary};font-size:${fontSize * 0.93}px;">Place received items on designated shelves</p>
+            </div>
+          </div>
+
+          <div class="card-base rounded-2xl p-6">
+            <h2 class="font-bold mb-6" style="font-size:${fontSize * 1.3}px;color:${textColor};">Shelving Tasks</h2>
+            <div class="space-y-3">
+              ${shelvingTasks.length > 0
+                ? shelvingTasks.map(task => {
+                    const product = state.products.find(p => p.id === task.product_id);
+                    return `
+                      <div class="p-4 rounded-lg border-2" style="border-color:#d1fae5;">
+                        <div class="flex items-start justify-between mb-3">
+                          <div>
+                            <p class="font-semibold text-lg" style="color:${textColor};">${product?.name || 'Unknown'}</p>
+                            <p style="font-size:${fontSize * 0.8}px;color:${secondary};">SKU: ${product?.sku || 'N/A'}</p>
+                          </div>
+                          <span class="text-2xl font-bold" style="color:#10b981;">${task.quantity}</span>
+                        </div>
+                        <div class="bg-green-50 p-3 rounded-lg mb-3">
+                          <p style="font-size:${fontSize * 0.85}px;color:#065f46;font-weight:500;">📦 Place in: ${task.to_location || 'Location TBD'}</p>
+                        </div>
+                        <button onclick="completeStaffTask('${task.task_id}')" class="btn-primary w-full py-2 rounded-lg text-white font-semibold" style="background:linear-gradient(135deg,#10b981,#059669);">
+                          ✓ Shelved Successfully
+                        </button>
+                      </div>
+                    `;
+                  }).join('')
+                : `<p style="text-align:center;color:${secondary};padding:2rem;">No shelving tasks assigned</p>`
+              }
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderStaffTransfers() {
+      const cfg = window.elementSdk ? window.elementSdk.config : defaultConfig;
+      const primary = cfg.primary_action || defaultConfig.primary_action;
+      const secondary = cfg.secondary_action || defaultConfig.secondary_action;
+      const textColor = cfg.text_color || defaultConfig.text_color;
+      const fontSize = cfg.font_size || defaultConfig.font_size;
+
+      const transferTasks = state.staffTasks.filter(t => t.task_type === 'transfer' && !t.completed);
+
+      return `
+        <div class="p-8">
+          <div class="flex items-center justify-between mb-8">
+            <div>
+              <h1 class="font-bold mb-2" style="font-size:${fontSize * 2}px;color:${textColor};">Transfers</h1>
+              <p style="color:${secondary};font-size:${fontSize * 0.93}px;">Move inventory between warehouse locations</p>
+            </div>
+          </div>
+
+          <div class="card-base rounded-2xl p-6">
+            <h2 class="font-bold mb-6" style="font-size:${fontSize * 1.3}px;color:${textColor};">Transfer Tasks</h2>
+            <div class="space-y-3">
+              ${transferTasks.length > 0
+                ? transferTasks.map(task => {
+                    const product = state.products.find(p => p.id === task.product_id);
+                    return `
+                      <div class="p-4 rounded-lg border-2" style="border-color:#dbeafe;">
+                        <div class="flex items-start justify-between mb-3">
+                          <div>
+                            <p class="font-semibold text-lg" style="color:${textColor};">${product?.name || 'Unknown'}</p>
+                            <p style="font-size:${fontSize * 0.8}px;color:${secondary};">SKU: ${product?.sku || 'N/A'}</p>
+                          </div>
+                          <span class="text-2xl font-bold" style="color:#0284c7;">${task.quantity}</span>
+                        </div>
+                        <div class="space-y-2 mb-3">
+                          <div class="bg-blue-50 p-2 rounded" style="font-size:${fontSize * 0.85}px;color:#1e40af;font-weight:500;">
+                            📍 From: ${task.from_location || 'Location A'}
+                          </div>
+                          <div class="bg-cyan-50 p-2 rounded" style="font-size:${fontSize * 0.85}px;color:#164e63;font-weight:500;">
+                            ➜ To: ${task.to_location || 'Location B'}
+                          </div>
+                        </div>
+                        <button onclick="completeStaffTask('${task.task_id}')" class="btn-primary w-full py-2 rounded-lg text-white font-semibold" style="background:linear-gradient(135deg,#0284c7,#0369a1);">
+                          ✓ Transfer Complete
+                        </button>
+                      </div>
+                    `;
+                  }).join('')
+                : `<p style="text-align:center;color:${secondary};padding:2rem;">No transfer tasks assigned</p>`
+              }
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderStaffCounting() {
+      const cfg = window.elementSdk ? window.elementSdk.config : defaultConfig;
+      const primary = cfg.primary_action || defaultConfig.primary_action;
+      const secondary = cfg.secondary_action || defaultConfig.secondary_action;
+      const textColor = cfg.text_color || defaultConfig.text_color;
+      const fontSize = cfg.font_size || defaultConfig.font_size;
+
+      const countingTasks = state.staffTasks.filter(t => t.task_type === 'counting' && !t.completed);
+
+      return `
+        <div class="p-8">
+          <div class="flex items-center justify-between mb-8">
+            <div>
+              <h1 class="font-bold mb-2" style="font-size:${fontSize * 2}px;color:${textColor};">Stock Count</h1>
+              <p style="color:${secondary};font-size:${fontSize * 0.93}px;">Verify and count inventory at locations</p>
+            </div>
+          </div>
+
+          <div class="card-base rounded-2xl p-6">
+            <h2 class="font-bold mb-6" style="font-size:${fontSize * 1.3}px;color:${textColor};">Counting Tasks</h2>
+            <div class="space-y-3">
+              ${countingTasks.length > 0
+                ? countingTasks.map(task => {
+                    const product = state.products.find(p => p.id === task.product_id);
+                    return `
+                      <div class="p-4 rounded-lg border-2" style="border-color:#fef08a;">
+                        <div class="flex items-start justify-between mb-3">
+                          <div>
+                            <p class="font-semibold text-lg" style="color:${textColor};">${product?.name || 'Unknown'}</p>
+                            <p style="font-size:${fontSize * 0.8}px;color:${secondary};">SKU: ${product?.sku || 'N/A'}</p>
+                          </div>
+                        </div>
+                        <div class="bg-yellow-50 p-3 rounded-lg mb-3">
+                          <p style="font-size:${fontSize * 0.85}px;color:#713f12;font-weight:500;">📊 Count items at: ${task.from_location || 'Location TBD'}</p>
+                          <p style="font-size:${fontSize * 0.8}px;color:#913f12;margin-top:0.25rem;">Expected: ${task.quantity} units</p>
+                        </div>
+                        <button onclick="completeStaffTask('${task.task_id}')" class="btn-primary w-full py-2 rounded-lg text-white font-semibold" style="background:linear-gradient(135deg,#f59e0b,#d97706);">
+                          ✓ Count Verified
+                        </button>
+                      </div>
+                    `;
+                  }).join('')
+                : `<p style="text-align:center;color:${secondary};padding:2rem;">No counting tasks assigned</p>`
+              }
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    // ===== ELEMENT SDK INIT =====
+    window.elementSdk.init({
+      defaultConfig,
+      onConfigChange: async (config) => {
+        const fontFamily = config.font_family || defaultConfig.font_family;
+        const baseFontStack = "'DM Sans', sans-serif";
+        document.body.style.fontFamily = `${fontFamily}, ${baseFontStack}`;
+
+        const bg = config.background_color || defaultConfig.background_color;
+        document.getElementById('app').style.background = bg;
+
+        render();
+      },
+      mapToCapabilities: (config) => ({
+        recolorables: [
+          {
+            get: () => config.background_color || defaultConfig.background_color,
+            set: (v) => { config.background_color = v; window.elementSdk.setConfig({ background_color: v }); }
+          },
+          {
+            get: () => config.surface_color || defaultConfig.surface_color,
+            set: (v) => { config.surface_color = v; window.elementSdk.setConfig({ surface_color: v }); }
+          },
+          {
+            get: () => config.text_color || defaultConfig.text_color,
+            set: (v) => { config.text_color = v; window.elementSdk.setConfig({ text_color: v }); }
+          },
+          {
+            get: () => config.primary_action || defaultConfig.primary_action,
+            set: (v) => { config.primary_action = v; window.elementSdk.setConfig({ primary_action: v }); }
+          },
+          {
+            get: () => config.secondary_action || defaultConfig.secondary_action,
+            set: (v) => { config.secondary_action = v; window.elementSdk.setConfig({ secondary_action: v }); }
+          }
+        ],
+        borderables: [],
+        fontEditable: {
+          get: () => config.font_family || defaultConfig.font_family,
+          set: (v) => { config.font_family = v; window.elementSdk.setConfig({ font_family: v }); }
+        },
+        fontSizeable: {
+          get: () => config.font_size || defaultConfig.font_size,
+          set: (v) => { config.font_size = v; window.elementSdk.setConfig({ font_size: v }); }
+        }
+      }),
+      mapToEditPanelValues: (config) => new Map([
+        ['app_title', config.app_title || defaultConfig.app_title],
+        ['app_tagline', config.app_tagline || defaultConfig.app_tagline]
+      ])
+    });
+
+    // Initial render
+    render();
+  </script>
+ <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9dc27c55344c9a75',t:'MTc3MzQ4Mjk5Ni4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
